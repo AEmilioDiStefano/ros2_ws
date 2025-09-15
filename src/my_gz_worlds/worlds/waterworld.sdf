@@ -372,7 +372,7 @@
     <model name="tidal_island_segment_1">
       <static>true</static>
       <link name="link">
-        <pose>35 -7 -2.2 0 0 0</pose>
+        <pose>35 -8 -2.2 0 0 0</pose>
         <collision name="col"><geometry><box><size>8 24 6</size></box></geometry></collision>
         <visual name="vis">
           <geometry><box><size>8 24 6</size></box></geometry>
@@ -397,7 +397,7 @@
     <!-- floor with realistic surface params -->
     <model name="tidal_island_segment_1_floor_model">
       <static>true</static>
-      <pose>35 -7 0.8 0 0 0</pose>
+      <pose>35 -8 0.8 0 0 0</pose>
       <link name="north_arena_floor_link">
         <collision name="col">
           <geometry><box><size>8 24 0.1</size></box></geometry>
@@ -447,7 +447,7 @@
     <model name="tidal_island_segment_2">
       <static>true</static>
       <link name="link">
-        <pose>40.3641 -7 -2.4876 0 0.2 0</pose>
+        <pose>40.3641 -8 -2.4876 0 0.2 0</pose>
         <collision name="col"><geometry><box><size>4 24 6</size></box></geometry></collision>
         <visual name="vis">
           <geometry><box><size>4 24 6</size></box></geometry>
@@ -469,7 +469,130 @@
       </link>
     </model>
 
-    
+    <model name="tidal_island_segment_3">
+      <static>true</static>
+      <link name="link">
+        <pose>44.2 -8 -2.8 0 0 0</pose>
+        <collision name="col"><geometry><box><size>5 24 6</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>5 24 6</size></box></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.45 0.45 0.45 1</diffuse>
+            <!-- This tag and its contents add texture (an image) to our models -->
+            <pbr>
+              <metal>
+                <!-- Point to your image -->
+                <albedo_map>model://textures/stone_textures/stone_wall_seamless_1.jpg</albedo_map>
+                <!-- Optional: roughness/metalness for a matte, non-metal look -->
+                <roughness>0.9</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="tidal_island_segment_4">
+      <static>true</static>
+      <link name="link">
+        <pose>48 -8 -2.4876 0 -0.2 0</pose>
+        <collision name="col"><geometry><box><size>4 24 6</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>4 24 6</size></box></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.45 0.45 0.45 1</diffuse>
+            <!-- This tag and its contents add texture (an image) to our models -->
+            <pbr>
+              <metal>
+                <!-- Point to your image -->
+                <albedo_map>model://textures/stone_textures/stone_wall_seamless_1.jpg</albedo_map>
+                <!-- Optional: roughness/metalness for a matte, non-metal look -->
+                <roughness>0.9</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="tidal_island_segment_5">
+      <static>true</static>
+      <link name="link">
+        <pose>53.3641 -8 -2.2 0 0 0</pose>
+        <collision name="col"><geometry><box><size>8 24 6</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>8 24 6</size></box></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.45 0.45 0.45 1</diffuse>
+            <!-- This tag and its contents add texture (an image) to our models -->
+            <pbr>
+              <metal>
+                <!-- Point to your image -->
+                <albedo_map>model://textures/stone_textures/stone_wall_seamless_1.jpg</albedo_map>
+                <!-- Optional: roughness/metalness for a matte, non-metal look -->
+                <roughness>0.9</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- floor with realistic surface params -->
+    <model name="tidal_island_segment_5_floor_model">
+      <static>true</static>
+      <pose>53.3641 -8 0.7999 0 0 0</pose>
+      <link name="north_arena_floor_link">
+        <collision name="col">
+          <geometry><box><size>8 24 0.1</size></box></geometry>
+          <surface>
+            <!-- Rubber-ish tires on painted plywood/concrete -->
+            <friction>
+              <ode>
+                <mu>0.9</mu>
+                <mu2>0.9</mu2>
+                <fdir1>1 0 0</fdir1>
+              </ode>
+            </friction>
+            <bounce>
+              <restitution_coefficient>0.03</restitution_coefficient>
+              <threshold>1e3</threshold>
+            </bounce>
+            <contact>
+              <ode>
+                <kp>1e6</kp>
+                <kd>1e3</kd>
+                <max_vel>1.0</max_vel>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>8 24 0.1</size></box></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.45 0.45 0.45 1</diffuse>
+            <!-- This tag and its contents add texture (an image) to our models -->
+            <pbr>
+              <metal>
+                <!-- Point to your image -->
+                <albedo_map>model://textures/grass_textures/green_grass_seamless.jpg</albedo_map>
+                <!-- Optional: roughness/metalness for a matte, non-metal look -->
+                <roughness>0.9</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
 
     <!--    _____ _  ____     __   ____           _____ _____  _____   -->
     <!--   / ____| |/ /\ \   / /  / __ \   /\    / ____|_   _|/ ____|  -->
@@ -748,7 +871,144 @@
             <pbr>
               <metal>
                 <!-- Point to your image -->
+                <albedo_map>model://textures/wood_textures/wood_texture_seamless_1x10.jpg</albedo_map>
+                <!-- Optional: roughness/metalness for a matte, non-metal look -->
+                <roughness>0.9</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="north_north_bridge_platform_1">
+      <static>true</static>
+      <link name="link">
+        <pose>17.5 6 4.925 0 0 0</pose>
+        <collision name="col">
+          <!-- width x length x height -->
+          <geometry><box><size>3 4 0.25</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>3 4 0.25</size></box></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.45 0.45 0.45 1</diffuse>
+            <!-- This tag and its contents add texture (an image) to our models -->
+            <pbr>
+              <metal>
+                <!-- Point to your image -->
                 <albedo_map>model://textures/wood_textures/wood_texture_seamless_longer.jpg</albedo_map>
+                <!-- Optional: roughness/metalness for a matte, non-metal look -->
+                <roughness>0.9</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="north_north_bridge">
+      <static>true</static>
+      <link name="link">
+        <pose>25.1 6 2.82 0 0.33 0</pose>
+        <collision name="col">
+          <!-- width x length x height -->
+          <geometry><box><size>13 4 0.25</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>13 4 0.25</size></box></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.45 0.45 0.45 1</diffuse>
+            <!-- This tag and its contents add texture (an image) to our models -->
+            <pbr>
+              <metal>
+                <!-- Point to your image -->
+                <albedo_map>model://textures/wood_textures/wood_texture_seamless_longer.jpg</albedo_map>
+                <!-- Optional: roughness/metalness for a matte, non-metal look -->
+                <roughness>0.9</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="north_north_bridge_platform_2">
+      <static>true</static>
+      <link name="link">
+        <pose>32.5 6 0.725 0 0 0</pose>
+        <collision name="col">
+          <!-- width x length x height -->
+          <geometry><box><size>3 4 0.25</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>3 4 0.25</size></box></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.45 0.45 0.45 1</diffuse>
+            <!-- This tag and its contents add texture (an image) to our models -->
+            <pbr>
+              <metal>
+                <!-- Point to your image -->
+                <albedo_map>model://textures/wood_textures/wood_texture_seamless_1.jpg</albedo_map>
+                <!-- Optional: roughness/metalness for a matte, non-metal look -->
+                <roughness>0.9</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="east_north_north_bridge">
+      <static>true</static>
+      <link name="link">
+        <pose>27.26 -16 1.986 0 0.3 0</pose>
+        <collision name="col">
+          <!-- width x length x height -->
+          <geometry><box><size>10 4 0.25</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>10 4 0.25</size></box></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.45 0.45 0.45 1</diffuse>
+            <!-- This tag and its contents add texture (an image) to our models -->
+            <pbr>
+              <metal>
+                <!-- Point to your image -->
+                <albedo_map>model://textures/wood_textures/wood_texture_seamless_1x5.jpg</albedo_map>
+                <!-- Optional: roughness/metalness for a matte, non-metal look -->
+                <roughness>0.9</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="stone_bridge_1">
+      <static>true</static>
+      <link name="link">
+        <pose>70 -8 -2.68 0 -0.12 0</pose>
+        <collision name="col"><geometry><box><size>30 8 10</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>30 8 10</size></box></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.45 0.45 0.45 1</diffuse>
+            <!-- This tag and its contents add texture (an image) to our models -->
+            <pbr>
+              <metal>
+                <!-- Point to your image -->
+                <albedo_map>model://textures/stone_textures/stone_wall_seamless_1.jpg</albedo_map>
                 <!-- Optional: roughness/metalness for a matte, non-metal look -->
                 <roughness>0.9</roughness>
                 <metalness>0.0</metalness>
