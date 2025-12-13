@@ -1,119 +1,81 @@
 #!/usr/bin/env python3
-"""
-fpv_camera_mux.py
-
-Listen to the active robot on /active_robot (std_msgs/String),
-subscribe to that robot's camera topics:
-
-  /<robot_name>/camera/image_raw
-  /<robot_name>/camera/camera_info
-
-and forward them to fixed FPV topics:
-
-  /fpv_camera/image_raw
-  /fpv_camera/camera_info
-"""
-
-from typing import Optional
+from typing import Dict
 
 import rclpy
 from rclpy.node import Node
-
+from sensor_msgs.msg import Image
 from std_msgs.msg import String
-from sensor_msgs.msg import Image, CameraInfo
 
 
-class FPVCameraMux(Node):
+class FpvCameraMux(Node):
     def __init__(self):
         super().__init__('fpv_camera_mux')
 
-        # Parameters so you can change suffixes if needed
-        self.declare_parameter('camera_image_suffix', 'camera/image_raw')
-        self.declare_parameter('camera_info_suffix', 'camera/camera_info')
+        # Known robots / camera topics (expand later as needed)
+        self.robot_camera_topics: Dict[str, str] = {
+            'emiliobot': '/emiliobot/camera/image_raw',
+            'my_robot': '/my_robot/camera/image_raw',
+        }
 
-        # Active robot name
-        self.current_robot: Optional[str] = None
+        # Subscribers for each robot camera
+        self.camera_subscribers: Dict[str, rclpy.subscription.Subscription] = {}
 
-        # Subscriptions for currently active robot
-        self._image_sub: Optional[rclpy.subscription.Subscription] = None
-        self._info_sub: Optional[rclpy.subscription.Subscription] = None
+        # Latest frames
+        self.latest_frames: Dict[str, Image] = {}
 
-        # Subscribe to /active_robot
+        # Active robot
+        self.active_robot = 'emiliobot'
+
+        # Output publisher
+        self.output_pub = self.create_publisher(Image, '/fpv_camera/image_raw', 10)
+
+        # Subscribe to active robot topic
         self.active_robot_sub = self.create_subscription(
             String,
-            '/active_robot',
-            self._on_active_robot,
-            10,
+            '/teleop/active_robot',
+            self.active_robot_callback,
+            10
         )
 
-        # Publishers for FPV topics
-        self.fpv_image_pub = self.create_publisher(
-            Image, '/fpv_camera/image_raw', 10)
-        self.fpv_info_pub = self.create_publisher(
-            CameraInfo, '/fpv_camera/camera_info', 10)
+        # Camera subscriptions
+        for robot_name, topic in self.robot_camera_topics.items():
+            sub = self.create_subscription(
+                Image,
+                topic,
+                lambda msg, name=robot_name: self.camera_callback(msg, name),
+                10
+            )
+            self.camera_subscribers[robot_name] = sub
 
-        self.get_logger().info(
-            "FPV Camera Mux started. Waiting for /active_robot..."
-        )
+        # Timer to republish active frame
+        self.timer = self.create_timer(0.05, self.timer_callback)  # 20 Hz
 
-    # ---------- Active robot handling ----------
+        self.get_logger().info('FPV camera mux initialized.')
 
-    def _on_active_robot(self, msg: String):
-        robot_name = msg.data.strip()
-        if not robot_name:
-            self.get_logger().warn("Received empty robot name.")
-            return
+    def active_robot_callback(self, msg: String):
+        if msg.data in self.robot_camera_topics:
+            self.active_robot = msg.data
+            self.get_logger().info(f'FPV active robot set to: {self.active_robot}')
+        else:
+            self.get_logger().warn(f'Unknown robot name in active_robot message: {msg.data}')
 
-        if robot_name == self.current_robot:
-            return
+    def camera_callback(self, msg: Image, robot_name: str):
+        self.latest_frames[robot_name] = msg
 
-        self.get_logger().info(f"Active robot changed to: {robot_name}")
-        self._switch_camera_subscriptions(robot_name)
-
-    def _switch_camera_subscriptions(self, robot_name: str):
-        # Clean up old subs
-        if self._image_sub is not None:
-            self.destroy_subscription(self._image_sub)
-            self._image_sub = None
-        if self._info_sub is not None:
-            self.destroy_subscription(self._info_sub)
-            self._info_sub = None
-
-        img_suffix = self.get_parameter('camera_image_suffix')\
-            .get_parameter_value().string_value.lstrip('/')
-        info_suffix = self.get_parameter('camera_info_suffix')\
-            .get_parameter_value().string_value.lstrip('/')
-
-        image_topic = f'/{robot_name}/{img_suffix}'
-        info_topic = f'/{robot_name}/{info_suffix}'
-
-        self.get_logger().info(
-            f"Subscribing to camera topics: {image_topic}, {info_topic}"
-        )
-
-        self._image_sub = self.create_subscription(
-            Image, image_topic, self._on_image, 10
-        )
-        self._info_sub = self.create_subscription(
-            CameraInfo, info_topic, self._on_camera_info, 10
-        )
-
-        self.current_robot = robot_name
-
-    # ---------- Forwarders ----------
-
-    def _on_image(self, msg: Image):
-        self.fpv_image_pub.publish(msg)
-
-    def _on_camera_info(self, msg: CameraInfo):
-        self.fpv_info_pub.publish(msg)
+    def timer_callback(self):
+        # Republish the latest frame for the active robot
+        frame = self.latest_frames.get(self.active_robot, None)
+        if frame is not None:
+            self.output_pub.publish(frame)
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = FPVCameraMux()
+    node = FpvCameraMux()
     try:
         rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
     finally:
         node.destroy_node()
         rclpy.shutdown()
