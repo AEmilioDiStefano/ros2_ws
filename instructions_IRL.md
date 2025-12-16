@@ -1,4 +1,4 @@
-# IRL Robot Setup (differential drive)
+# IRL Robot Setup (differential drive) 
 
 By the end of this instructional you will have built **your own differential drive robot**, controllable via WiFi with your keyboard and ready for autonomous functions
 
@@ -8,7 +8,7 @@ By the end of this instructional you will have built **your own differential dri
 
 <br>
 
-## Materials
+## Materials :gear:
 
 ### ONE Raspberry Pi 4 with 4 gigs of RAM
 
@@ -36,7 +36,14 @@ We will not include instructions on how to make your own chassis, these can be b
 
 <br>
 
-## Tools
+## Tools :toolbox:
+
+Almost all of these tools can be replaced with basic household items, but we will include this list of tools for those who have them on-hand
+
+**ONE** wire stripper (or a nail clipper and very steady hands) 
+
+**ONE** hot silicone gun (or any thick adhesive)
+
 
 
 
