@@ -10,7 +10,7 @@ By the end of this instructional you will have built **your own differential dri
 
 ## Materials
 
-**ONE** Raspberry Pi 4 with 4 gigs of RAM
+### ONE Raspberry Pi 4 with 4 gigs of RAM
 
 **ONE** L298N Motor Controller
 
