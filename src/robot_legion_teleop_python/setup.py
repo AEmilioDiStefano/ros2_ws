@@ -4,34 +4,35 @@ package_name = 'robot_legion_teleop_python'
 
 setup(
     name=package_name,
-    version='0.0.1',
+    version='0.1.0',
     packages=[package_name],
     data_files=[
-        # Ament index so ROS 2 can discover this package
         ('share/ament_index/resource_index/packages',
          ['resource/' + package_name]),
-        # Package manifest
         ('share/' + package_name, ['package.xml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='Vitruvian Systems LLC',
-    maintainer_email='emilio@viturvian.systems',
-    description='Keyboard teleoperation node and FPV utilities for Robot Legion simulations.',
-    license='PolyForm Noncommercial License 1.0.0',
+    maintainer_email='emilio@vitruvian.systems',
+    description='Keyboard teleop, motor driver, camera node, and FPV mux for Robot Legion robots.',
+    license='CC-BY-NC-4.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            # Teleop
+            # Teleop (keyboard)
             'legion_teleop_key = robot_legion_teleop_python.teleop_legion_key:main',
 
-            # Heartbeat monitor (from earlier)
-            'robot_heartbeat = robot_legion_teleop_python.robot_heartbeat:main',
+            # Real robot motor driver (L298N + yellow motors)
+            'motor_driver_node = robot_legion_teleop_python.motor_driver_node:main',
 
-            # Gazebo / Ignition reset utility
+            # Real-world camera node (emiliobot camera publisher)
+            'legion_camera = robot_legion_teleop_python.legion_camera_node:main',
+
+            # Gazebo reset utility
             'reset_gz = robot_legion_teleop_python.reset_gz:main',
 
-            # NEW: FPV camera multiplexer
+            # FPV camera multiplexer (simulation + future robots)
             'fpv_camera_mux = robot_legion_teleop_python.fpv_camera_mux:main',
         ],
     },

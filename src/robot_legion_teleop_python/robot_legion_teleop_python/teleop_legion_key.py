@@ -2,14 +2,17 @@
 """
 teleop_legion_key.py
 
-Keyboard teleop for multiple robots, with FPV integration:
+Keyboard teleop for multiple robots with FPV integration:
 
 - Publishes geometry_msgs/Twist to a cmd_vel topic (per-robot).
 - Lets you switch robots at runtime with 'm'.
-- Publishes the currently controlled robot on /active_robot (std_msgs/String).
+- Publishes the currently controlled robot on:
+    - /active_robot
+    - /teleop/active_robot   (for fpv_camera_mux)
 
-Any node can subscribe to /active_robot to "follow" the active robot,
-e.g. an FPV camera multiplexer.
+Keymap preserved:
+  7 fwd-left, 9 fwd-right, 8 fwd, 5 stop, 4 rotate-left, 6 rotate-right,
+  1 back-left, 3 back-right, 2 back, i/o/p speed profiles, etc.
 """
 
 import sys
@@ -25,19 +28,14 @@ from std_msgs.msg import String
 
 
 def get_key(settings):
-    """
-    Read a single key press from stdin in raw mode.
-    Arrow keys come in as escape sequences.
-    """
     tty.setraw(sys.stdin.fileno())
     rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
     if rlist:
         key = sys.stdin.read(1)
-        if key == '\x1b':  # start of escape sequence (arrows, etc.)
+        if key == '\x1b':
             key += sys.stdin.read(2)
         return key
-    else:
-        return ''
+    return ''
 
 
 def restore_terminal_settings(settings):
@@ -48,17 +46,23 @@ class RobotLegionTeleop(Node):
     def __init__(self):
         super().__init__('robot_legion_teleop_python')
 
-        # Parameter: default cmd_vel topic
+        # Default cmd_vel topic (IMPORTANT for real robot: set to /emiliobot/cmd_vel)
         self.declare_parameter('cmd_vel_topic', '/cmd_vel')
-        cmd_vel_topic = self.get_parameter('cmd_vel_topic')\
-            .get_parameter_value().string_value
-        self.cmd_vel_topic = cmd_vel_topic
 
-        # Publisher for Twist commands
+        # If False, 'm' will NOT change cmd_vel topic (safe for real robot).
+        # You can still publish active robot updates for FPV.
+        self.declare_parameter('allow_cmd_vel_switching', True)
+
+        cmd_vel_topic = self.get_parameter('cmd_vel_topic').get_parameter_value().string_value
+        self.allow_cmd_vel_switching = bool(self.get_parameter('allow_cmd_vel_switching').value)
+
+        self.cmd_vel_topic = cmd_vel_topic
         self.publisher_ = self.create_publisher(Twist, cmd_vel_topic, 10)
 
-        # Publisher for active robot name
+        # Active robot publishers (both topics)
         self.active_robot_pub = self.create_publisher(String, '/active_robot', 10)
+        self.active_robot_teleop_pub = self.create_publisher(String, '/teleop/active_robot', 10)
+
         self.current_robot_name: Optional[str] = self._extract_robot_name_from_topic(cmd_vel_topic)
         if self.current_robot_name:
             self._publish_active_robot()
@@ -77,22 +81,21 @@ class RobotLegionTeleop(Node):
         self.fast_linear = self.base_slow_linear * (self.speed_step ** 15)
         self.fast_angular = self.base_slow_angular * (self.speed_step ** 10)
 
-        # Last commanded direction
         self.last_lin_mult = 0.0
         self.last_ang_mult = 0.0
         self.is_moving = False
 
-        # Movement bindings: key -> (linear_mult, angular_mult)
+        # MOVEMENT BINDINGS (unchanged from your current file) :contentReference[oaicite:5]{index=5}
         self.move_bindings = {
-            '\x1b[A': (1, 0),    # Up arrow
-            '\x1b[B': (-1, 0),   # Down arrow
-            '\x1b[D': (0, 1),    # Left arrow
-            '\x1b[C': (0, -1),   # Right arrow
+            '\x1b[A': (1, 0),
+            '\x1b[B': (-1, 0),
+            '\x1b[D': (0, 1),
+            '\x1b[C': (0, -1),
 
-            '8': (1, 0),   # Numpad up
-            '2': (-1, 0),  # Numpad down
-            '4': (0, 1),   # Numpad left
-            '6': (0, -1),  # Numpad right
+            '8': (1, 0),
+            '2': (-1, 0),
+            '4': (0, 1),
+            '6': (0, -1),
 
             'a': (1, 1),
             'd': (1, -1),
@@ -105,7 +108,6 @@ class RobotLegionTeleop(Node):
             '3': (-1, -1),
         }
 
-        # Speed and profile bindings: key -> method
         self.speed_bindings = {
             'w': self._increase_both_speeds,
             '+': self._increase_both_speeds,
@@ -122,44 +124,25 @@ class RobotLegionTeleop(Node):
 
         self._print_instructions(cmd_vel_topic)
 
-    # ------------- Printing & help -------------
-
     def _print_instructions(self, topic_name):
         print("--------------------------------------------------")
         print(" Robot Legion Teleop (Python) with FPV support")
         print("--------------------------------------------------")
         print(f"Publishing Twist on: {topic_name}")
+        print(f"allow_cmd_vel_switching: {self.allow_cmd_vel_switching}")
         if self.current_robot_name:
             print(f"Initial active robot: {self.current_robot_name}")
         print("")
-        print("Movement:")
-        print("  Arrow keys / numpad 8,2,4,6   : forward/back/turn")
-        print("  a,d,<,c and numpad 7,9,1,3    : diagonals")
-        print("Stop:")
-        print("  [SPACE], 's', or numpad 5     : stop")
-        print("")
-        print("Speed:")
-        print("  w / +   : increase linear+angular")
-        print("  e / -   : decrease linear+angular")
-        print("  q / /   : increase linear")
-        print("  r / *   : decrease linear")
-        print("Profiles:")
-        print("  i       : SLOW")
-        print("  o       : MEDIUM")
-        print("  p       : FAST")
-        print("")
-        print("Robot selection:")
-        print("  m       : switch robot (updates /active_robot)")
-        print("")
+        print("Movement: 8/2/4/6, 7/9/1/3, arrows also work")
+        print("Stop: [SPACE], 's', or 5")
+        print("Profiles: i=slow, o=medium, p=fast")
+        print("Robot selection: m (only changes cmd_vel topic if allow_cmd_vel_switching=True)")
         print("CTRL-C to quit.")
         print("--------------------------------------------------")
         self._print_current_speeds()
 
     def _print_current_speeds(self):
-        print("Linear Speed: {:.3f}  Angular Speed: {:.3f}".format(
-            self.linear_speed, self.angular_speed))
-
-    # ------------- Active robot helpers -------------
+        print(f"Linear Speed: {self.linear_speed:.3f}  Angular Speed: {self.angular_speed:.3f}")
 
     def _extract_robot_name_from_topic(self, topic: str) -> Optional[str]:
         if not topic:
@@ -167,7 +150,6 @@ class RobotLegionTeleop(Node):
         if not topic.startswith('/'):
             topic = '/' + topic
         parts = topic.split('/')
-        # ['', 'emiliobot', 'cmd_vel']
         if len(parts) >= 3 and parts[2] == 'cmd_vel' and parts[1]:
             return parts[1]
         if 'cmd_vel' in parts:
@@ -178,14 +160,12 @@ class RobotLegionTeleop(Node):
 
     def _publish_active_robot(self):
         if not self.current_robot_name:
-            print("[ACTIVE ROBOT] No robot name inferred; nothing to publish.")
             return
         msg = String()
         msg.data = self.current_robot_name
         self.active_robot_pub.publish(msg)
+        self.active_robot_teleop_pub.publish(msg)
         print(f"[ACTIVE ROBOT] Now controlling: {self.current_robot_name}")
-
-    # ------------- Twist republishing -------------
 
     def _republish_last_twist(self):
         if not self.is_moving:
@@ -197,75 +177,57 @@ class RobotLegionTeleop(Node):
         twist.angular.z = self.angular_speed * self.last_ang_mult
         self.publisher_.publish(twist)
 
-    # ------------- Speed modifiers -------------
-
     def _increase_both_speeds(self):
         self.linear_speed *= self.speed_step
         self.angular_speed *= self.speed_step
-        print("[w/+] Increased both speeds.")
         self._print_current_speeds()
         self._republish_last_twist()
 
     def _decrease_both_speeds(self):
         self.linear_speed /= self.speed_step
         self.angular_speed /= self.speed_step
-        print("[e/-] Decreased both speeds.")
         self._print_current_speeds()
         self._republish_last_twist()
 
     def _increase_linear_speed(self):
         self.linear_speed *= self.speed_step
-        print("[q//] Increased linear speed.")
         self._print_current_speeds()
         self._republish_last_twist()
 
     def _decrease_linear_speed(self):
         self.linear_speed /= self.speed_step
-        print("[r/*] Decreased linear speed.")
         self._print_current_speeds()
         self._republish_last_twist()
-
-    # ------------- Profiles -------------
 
     def _set_slow_profile(self):
         self.linear_speed = self.base_slow_linear
         self.angular_speed = self.base_slow_angular
-        print("[i] SLOW profile.")
         self._print_current_speeds()
         self._republish_last_twist()
 
     def _set_medium_profile(self):
         self.linear_speed = self.medium_linear
         self.angular_speed = self.medium_angular
-        print("[o] MEDIUM profile.")
         self._print_current_speeds()
         self._republish_last_twist()
 
     def _set_fast_profile(self):
         self.linear_speed = self.fast_linear
         self.angular_speed = self.fast_angular
-        print("[p] FAST profile.")
         self._print_current_speeds()
         self._republish_last_twist()
-
-    # ------------- Robot switching -------------
 
     def _switch_robot_prompt(self, settings):
         restore_terminal_settings(settings)
         try:
             print("\n[ROBOT SWITCH] Enter robot name or full cmd_vel topic.")
-            print("  Example names: my_robot, emiliobot")
-            print("  Example topic: /emiliobot/cmd_vel")
             user_input = input("[ROBOT SWITCH] Target: ").strip()
-        except Exception as exc:
-            print(f"[ROBOT SWITCH] Input cancelled: {exc}")
+        except Exception:
             tty.setraw(sys.stdin.fileno())
             return
-
         tty.setraw(sys.stdin.fileno())
 
         if not user_input:
-            print("[ROBOT SWITCH] No input; keeping:", self.cmd_vel_topic)
             return
 
         if user_input.startswith('/') or '/' in user_input:
@@ -278,19 +240,21 @@ class RobotLegionTeleop(Node):
         if not new_topic.startswith('/'):
             new_topic = '/' + new_topic
 
+        # Always publish active robot change (for FPV), even if we don't switch cmd_vel.
+        self.current_robot_name = new_robot_name
+        self._publish_active_robot()
+
+        if not self.allow_cmd_vel_switching:
+            print(f"[ROBOT SWITCH] cmd_vel switching disabled; staying on {self.cmd_vel_topic}")
+            return
+
         try:
             self.destroy_publisher(self.publisher_)
         except Exception:
             pass
-
         self.publisher_ = self.create_publisher(Twist, new_topic, 10)
         self.cmd_vel_topic = new_topic
-        self.current_robot_name = new_robot_name
-
         print(f"[ROBOT SWITCH] Now publishing Twist to: {new_topic}")
-        self._publish_active_robot()
-
-    # ------------- Main loop -------------
 
     def run(self):
         settings = termios.tcgetattr(sys.stdin)
@@ -299,8 +263,7 @@ class RobotLegionTeleop(Node):
                 key = get_key(settings)
                 if key == '':
                     continue
-
-                if key == '\x03':  # Ctrl-C
+                if key == '\x03':
                     break
 
                 if key in self.move_bindings:
@@ -315,8 +278,7 @@ class RobotLegionTeleop(Node):
                     self.publisher_.publish(twist)
 
                 elif key in (' ', '5', 's'):
-                    twist = Twist()
-                    self.publisher_.publish(twist)
+                    self.publisher_.publish(Twist())
                     self.is_moving = False
                     self.last_lin_mult = 0.0
                     self.last_ang_mult = 0.0
@@ -328,14 +290,8 @@ class RobotLegionTeleop(Node):
                 elif key in self.speed_bindings:
                     self.speed_bindings[key]()
 
-                else:
-                    print(f"Unknown key: {repr(key)} (CTRL-C to quit).")
-
-        except Exception as e:
-            print("Exception in teleop:", e)
         finally:
-            stop_twist = Twist()
-            self.publisher_.publish(stop_twist)
+            self.publisher_.publish(Twist())
             restore_terminal_settings(settings)
 
 
