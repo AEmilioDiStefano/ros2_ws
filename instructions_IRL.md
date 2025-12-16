@@ -32,9 +32,9 @@ By the end of this instructional you will have built **your own differential dri
 
 **ONE** chassis with **FOUR** DC gear motors (easy to find at hobby shops)
 
-We will not include instructions on how to make your own chassis, these can be bought ready-made or assembled easily from a small rectangle of sheet metal and some simple tools
+We will not include instructions on how to make your own chassis, these can be bought ready-made or assembled easily from a small rectangle of sheet metal and some simple tools. 
 
-The outer shell of our robot was made using a 3D printer, but this can be made by hand or cut out of a recycled plastic shell of any kind)
+The outer shell of the robot in the GIF was made using a 3D printer, but this can be made by hand or made from a recycled plastic shell of any kind.
 
 <br>
 
