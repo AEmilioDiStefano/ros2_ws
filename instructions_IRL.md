@@ -16,7 +16,7 @@ By the end of this instructional you will have built **your own differential dri
 
 **ONE** power bank portable phone charger (at least 10 000 mAh, QC at least 18W, PD at least 18W) 
 
-**ONE** fuse holder (can be for car or motorcycle) **with at least one 5W fuse**
+**ONE** fuse holder **with at least one 5W fuse** (can be for car, motorcycle, or other type of machine)
 
 <br>
 
