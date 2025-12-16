@@ -34,6 +34,8 @@ By the end of this instructional you will have built **your own differential dri
 
 We will not include instructions on how to make your own chassis, these can be bought ready-made or assembled easily from a small rectangle of sheet metal and some simple tools
 
+The outer shell of our robot was made using a 3D printer, but this can be made by hand or cut out of a recycled plastic shell of any kind)
+
 <br>
 
 ## Tools :toolbox:
