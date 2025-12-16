@@ -10,5 +10,5 @@ By the end of this instructional you will have built **your own differential dri
 
 ## Materials and Tols
 
-**1** Raspberry Pi 4 with 4 gigs of RAM
+**One** Raspberry Pi 4 with 4 gigs of RAM
 
