@@ -26,6 +26,10 @@ By the end of this instructional you will have built **your own differential dri
 
 **ONE** USB webcam 
 
+**ONE PACK** of male-to-female jumper cables 
+
+**ONE PACK** of female-to-female jumper cables
+
 **ONE** chassis with **FOUR** DC gear motors (easy to find at hobby shops)
 
 We will not include instructions on how to make your own chassis, these can be bought ready-made or assembled easily from a small rectangle of sheet metal and some simple tools
