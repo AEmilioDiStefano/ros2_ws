@@ -34,6 +34,9 @@ setup(
 
             # FPV camera multiplexer (simulation + future robots)
             'fpv_camera_mux = robot_legion_teleop_python.fpv_camera_mux:main',
+
+            # USB camera node
+            'usb_camera_node = robot_legion_teleop_python.usb_camera_node:main',
         ],
     },
 )
