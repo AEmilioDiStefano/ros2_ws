@@ -14,9 +14,21 @@ By the end of this instructional you will have built **your own differential dri
 
 **ONE** L298N Motor Controller
 
-**ONE** power bank portable phone charger (at least 10 000 mAh, QC at least 18W, PD at least 18W) 
+**ONE** power bank portable phone charger (at least 10,000 mAh, QC at least 18W, PD at least 18W) 
 
 **ONE** fuse holder **with at least one 5W fuse** (can be for car, motorcycle, or other type of machine)
+
+**ONE** simple on/off switch 
+
+**TWO** 3.7V 18650 Li-ion battery (at least 2,200 mAh)
+
+**ONE** battery holder for your 18650 Li-ion batteries 
+
+**ONE** USB webcam 
+
+**ONE** chassis with **FOUR** DC gear motors (easy to find at hobby shops)
+
+We will not include instructions to make your own chassis, these can be bought ready-made or assembled easily from sheet metal and your DC gear motors
 
 <br>
 
