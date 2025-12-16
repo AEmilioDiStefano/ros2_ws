@@ -28,7 +28,7 @@ By the end of this instructional you will have built **your own differential dri
 
 **ONE** chassis with **FOUR** DC gear motors (easy to find at hobby shops)
 
-We will not include instructions to make your own chassis, these can be bought ready-made or assembled easily from sheet metal and your DC gear motors
+We will not include instructions to make your own chassis, these can be bought ready-made or assembled easily from a small rectangle of sheet metal and some simple tools
 
 <br>
 
