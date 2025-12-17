@@ -36,7 +36,11 @@ By the end of this instructional you will have built **your own differential dri
 (depicted above is one example of a viable option, your fuse and fuse holder may look different)
 
 
-## ONE simple on/off switch 
+## ONE simple ON /OFF switch 
+
+![host-and-port](media/on_off_switch.jpeg) 
+<br>
+(depicted above is one example of a viable option, your ON / OFF switch may look different)
 
 ## TWO 3.7V 18650 Li-ion battery (at least 2,200 mAh)
 
