@@ -79,9 +79,9 @@ By the end of this instructional you will have built **your own differential dri
 (depicted above is one example of a viable option, your jumper cables may look different)
 
 
-## ONE chassis with **FOUR** DC gear motors
+## ONE chassis with **FOUR** DC gear motors (make sure to buy a wheel for each motor, 4 total)
 
-These DC motors are easy to find at hobby shops.  You can make your own chassis or buy a chassis which includes four motors similar to the yellow motors depicted below
+**These DC gear motors are easy to find at hobby shops**.  You can make your own chassis or buy an assembled chassis that already includes four motors similar to the yellow DC gear motors depicted below
 
 ![host-and-port](media/motors_with_chassis.jpeg) 
 <br>
@@ -97,6 +97,10 @@ The outer shell of the robot in the GIF was made using a 3D printer, but this ca
 ## TOOLS :toolbox:
 
 Almost all of these tools can be replaced with basic household items, but we will include this list of tools for those who have them on-hand
+
+**at least ONE** pair of tweezers to hold wires steady during within the robot during final stages
+
+**ONE** screwdriver set, or a screwdriver with a tip small enough for M2, M2.5, or M3 screws (these screws will be used to attach your pi and your motor controller to your chassis, if you dedice to connect these components to the chassis in another way then the screwdriver will not be needed)
 
 **ONE** wire stripper (or a nail clipper and very steady hands) 
 
