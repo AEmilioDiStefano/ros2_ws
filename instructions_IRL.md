@@ -72,6 +72,8 @@ By the end of this instructional you will have built **your own differential dri
 
 ## ONE PACK of male-to-female jumper cables
 
+**NOTE:** The female side of these jumper cables will be cut off, so **male-to-male jumper cables would also work here**
+
 ![host-and-port](media/jumper_cables_male_to_female.jpeg) 
 <br>
 (depicted above is one example of a viable option, your jumper cables may look different)
