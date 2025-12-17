@@ -14,7 +14,7 @@ By the end of this instructional you will have built **your own differential dri
 
 **ONE** L298N Motor Controller
 
-**ONE** power bank or portable phone charger (at least 10,000 mAh, QC at least 18W, PD at least 18W) 
+**ONE** power bank or portable phone charger (at least 10,000 mAh, QC at least 18W, PD at least 18W) (must include USB to type-c charge cable)
 
 **ONE** fuse holder **with at least one 5W fuse** (can be for car, motorcycle, or other type of machine)
 
@@ -45,6 +45,12 @@ Almost all of these tools can be replaced with basic household items, but we wil
 **ONE** wire stripper (or a nail clipper and very steady hands) 
 
 **ONE** hot silicone gun (or any thick adhesive)
+
+<br>
+
+## GPIO Pin Setup
+
+The GPIO pins on the Raspberry Pi will connect to the pins on your L298N Motor Controller.  The controler used in this tutorial has pin labels **ENA, IN1, IN2, IN3, IN4, and ENB**.  These are the controler pins that look like the GPIO pins on your Raspberry Pi.  If your controler's pin labels are different, check the list below to see which of your pins  
 
 
 
