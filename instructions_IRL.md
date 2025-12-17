@@ -127,13 +127,20 @@ The GPIO pins on the Raspberry Pi will connect to the pins on your L298N Motor C
 
 **IN4** is sometimes labeled as **INA4**, **AIN4**, or **I4**
 
-<br>
-
 ### Connect the following pins on the motor controller to the folowing pins on the Raspberry Pi:
 
-
+**ENA** to ****
+**ENB** to ****
+**IN1** to ****
+**IN2** to ****
+**IN3** to ****
+**IN4** to ****
 
 These connections are depicted below:
+
+![host-and-port](media/[GPIO_code_1.png]) ![host-and-port](media/[GPIO_code_2.png])
+
+The GPIO pins connected to the motor controller will be referenced in our code:
 
 ![host-and-port](media/GPIO_to_controller_2.jpeg) ![host-and-port](media/GPIO_to_controller_3.jpeg)
 
