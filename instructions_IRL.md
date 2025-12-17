@@ -42,7 +42,11 @@ By the end of this instructional you will have built **your own differential dri
 <br>
 (depicted above is one example of a viable option, your ON / OFF switch may look different)
 
-## TWO 3.7V 18650 Li-ion battery (at least 2,200 mAh)
+## TWO 3.7V 18650 Li-ion battery (at least 2,200 mAh) (make sure to get the bettery charger!)
+
+![host-and-port](media/li-ion_batteries.jpeg) 
+<br>
+(depicted above is one example of a viable option, your batteries may look different)
 
 ## ONE battery holder for your two 18650 Li-ion batteries **or two battery holder each for oneindividual battery**
 
