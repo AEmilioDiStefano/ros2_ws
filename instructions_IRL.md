@@ -64,16 +64,15 @@ By the end of this instructional you will have built **your own differential dri
 (depicted above is one example of a viable option, your webcam may look different)
 
 
-## ONE PACK of male-to-female jumper cables 
+## ONE PACK of female-to-female jumper cables 
 
-![host-and-port](media/jumper_cable_female_to_female.jpeg) 
+![host-and-port](media/jumper_cables_female_to_female.jpeg) 
 <br>
 (depicted above is one example of a viable option, your jumper cables may look different)
 
-## ONE PACK of female-to-female jumper cables
+## ONE PACK of male-to-female jumper cables
 
-
-![host-and-port](media/jumper_cable_male_to_female.jpeg) 
+![host-and-port](media/jumper_cables_male_to_female.jpeg) 
 <br>
 (depicted above is one example of a viable option, your jumper cables may look different)
 
