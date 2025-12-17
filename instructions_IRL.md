@@ -11,21 +11,28 @@ By the end of this instructional you will have built **your own differential dri
 ## MATERIALS :gear:
 
 ## ONE Raspberry Pi 4 with 4 gigs of RAM (we used Model B)
+
 ![host-and-port](media/raspberry_pi_picture_1.jpeg) ![host-and-port](media/raspberry_pi_picture_2_box.jpeg)
 
 
 ## ONE L298N Motor Controller
+
 ![host-and-port](media/motor_controller_1.jpeg) ![host-and-port](media/motor_controller_2_closeup.jpeg)
+
 (depicted above is one example of a viable option, your motor controller may look different)
 
 
 ## ONE power bank or portable phone charger (at least 10,000 mAh, QC at least 18W, PD at least 18W),  **must include USB to type-c charge cable**) 
+
 ![host-and-port](media/portable_power_bank.png)
+
 (depicted above is one example of a viable option, your power bank may look different)
 
 
 ## ONE fuse holder **with at least one 5W fuse** (can be for car, motorcycle, or other type of machine)
+
 ![host-and-port](media/)
+
 (depicted above is one example of a viable option, your fuse and fuse holder may look different)
 
 
