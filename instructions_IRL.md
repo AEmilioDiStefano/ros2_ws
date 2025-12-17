@@ -73,6 +73,7 @@ By the end of this instructional you will have built **your own differential dri
 ## ONE PACK of male-to-female jumper cables
 
 **NOTE:** The female side of these jumper cables will be cut off, so **male-to-male jumper cables would also work here**
+**HOWEVER**, you will definitely need at least one female-to-male jumper cable to connect the GND on the Pi to GND on the motor controller
 
 ![host-and-port](media/jumper_cables_male_to_female.jpeg) 
 <br>
@@ -109,7 +110,9 @@ Almost all of these tools can be replaced with basic household items, but we wil
 <br>
 
 ## GPIO Pin Setup
+
 ![host-and-port](media/motor_controller_1.jpeg) ![host-and-port](media/raspberry_pi_picture_1.jpeg)
+
 The GPIO pins on the Raspberry Pi will connect to the pins on your L298N Motor Controller.  The controler used in this tutorial has pin labels **ENA, IN1, IN2, IN3, IN4, and ENB**.  These are the controler pins that look like the GPIO pins on your Raspberry Pi.  If your controler's pin labels are different, check the list below to see which of your pins  
 
 
