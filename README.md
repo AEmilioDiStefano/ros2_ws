@@ -1,6 +1,8 @@
 # FPV-Enabled Swarm Control Workspace
 
-![host-and-port](media/FPV_gif.gif)
+![host-and-port](media/FPV_gif.gif) 
+
+![host-and-port](media/hide-and-seek-GIF.gif)
 
 # :book:
 # SETUP INSTRUCTIONS
