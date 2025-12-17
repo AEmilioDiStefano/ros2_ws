@@ -98,7 +98,7 @@ The outer shell of the robot in the GIF was made using a 3D printer, but this ca
 
 Almost all of these tools can be replaced with basic household items, but we will include this list of tools for those who have them on-hand
 
-**at least ONE** pair of tweezers to hold wires steady during within the robot during final stages
+**at least ONE** pair of tweezers to hold wires steady within the robot during final build steps
 
 **ONE** screwdriver set, or a screwdriver with a tip small enough for M2, M2.5, or M3 screws (these screws will be used to attach your pi and your motor controller to your chassis, if you dedice to connect these components to the chassis in another way then the screwdriver will not be needed)
 
