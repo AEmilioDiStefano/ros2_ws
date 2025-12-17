@@ -16,7 +16,7 @@ By the end of this instructional you will have built **your own differential dri
 
 #  ONE L298N Motor Controller
 
-![host-and-port](media/motor_controller_1.jpeg) ![host-and-port](media/motor_controller_2.jpeg)
+![host-and-port](media/motor_controller_1.jpeg) ![host-and-port](media/motor_controller_2_closeup.jpeg)
 
 **ONE** power bank or portable phone charger (at least 10,000 mAh, QC at least 18W, PD at least 18W),  **must include USB to type-c charge cable**)
 
