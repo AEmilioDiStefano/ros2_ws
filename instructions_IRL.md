@@ -111,7 +111,7 @@ Almost all of these tools can be replaced with basic household items, but we wil
 
 ## GPIO Pin Setup
 
-![host-and-port](media/motor_controller_1.jpeg) ![host-and-port](media/raspberry_pi_picture_1.jpeg)
+![host-and-port](media/GPIO_to_controller_1.jpeg)
 
 The GPIO pins on the Raspberry Pi will connect to the pins on your L298N Motor Controller.  The controler used in this tutorial has pin labels **ENA, IN1, IN2, IN3, IN4, and ENB**.  These are the controler pins that look like the GPIO pins on your Raspberry Pi.  If your controler's pin labels are different, check the list below to see which of your pins 
 
