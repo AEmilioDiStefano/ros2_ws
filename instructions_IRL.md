@@ -42,11 +42,13 @@ By the end of this instructional you will have built **your own differential dri
 <br>
 (depicted above is one example of a viable option, your ON / OFF switch may look different)
 
+
 ## TWO 3.7V 18650 Li-ion battery (at least 2,200 mAh) (make sure to get the bettery charger!)
 
 ![host-and-port](media/li-ion_batteries.jpeg) 
 <br>
 (depicted above is one example of a viable option, your batteries may look different)
+
 
 ## ONE battery holder for your two 18650 Li-ion batteries **or two battery holder each for oneindividual battery**
 
@@ -54,13 +56,36 @@ By the end of this instructional you will have built **your own differential dri
 <br>
 (depicted above is one example of a viable option, your batteries may look different)
 
+
 ## ONE USB webcam 
+
+![host-and-port](media/webcam.png) 
+<br>
+(depicted above is one example of a viable option, your webcam may look different)
+
 
 ## ONE PACK of male-to-female jumper cables 
 
+![host-and-port](media/jumper_cable_female_to_female.jpeg) 
+<br>
+(depicted above is one example of a viable option, your jumper cables may look different)
+
 ## ONE PACK of female-to-female jumper cables
 
-## ONE chassis with **FOUR** DC gear motors (easy to find at hobby shops)
+
+![host-and-port](media/jumper_cable_male_to_female.jpeg) 
+<br>
+(depicted above is one example of a viable option, your jumper cables may look different)
+
+
+## ONE chassis with **FOUR** DC gear motors
+
+These DC motors are easy to find at hobby shops.  You can make your own chassis or buy a chassis which includes four motors similar to the yellow motors depicted below
+
+![host-and-port](media/motors_with_chassis.jpeg) 
+<br>
+(depicted above is one example of a viable option, your chassis may look different)
+
 
 We will not include instructions on how to make your own chassis, these can be bought ready-made or assembled easily from a small rectangle of sheet metal and some simple tools. 
 
@@ -68,7 +93,7 @@ The outer shell of the robot in the GIF was made using a 3D printer, but this ca
 
 <br>
 
-## Tools :toolbox:
+## TOOLS :toolbox:
 
 Almost all of these tools can be replaced with basic household items, but we will include this list of tools for those who have them on-hand
 
