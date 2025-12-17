@@ -14,7 +14,7 @@ By the end of this instructional you will have built **your own differential dri
 
 ![host-and-port](media/raspberry_pi_picture_1.jpeg) ![host-and-port](media/raspberry_pi_picture_2_box.jpeg)
 
-### ONE L298N Motor Controller
+## ONE L298N Motor Controller
 
 ![host-and-port](media/motor_controller_1.jpeg) ![host-and-port](media/motor_controller_2_closeup.jpeg)
 
