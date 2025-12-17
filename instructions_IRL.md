@@ -18,23 +18,27 @@ By the end of this instructional you will have built **your own differential dri
 
 ![host-and-port](media/motor_controller_1.jpeg) ![host-and-port](media/motor_controller_2_closeup.jpeg)
 
-## ONE power bank or portable phone charger (at least 10,000 mAh, QC at least 18W, PD at least 18W),  **must include USB to type-c charge cable**)
+## ONE power bank or portable phone charger (at least 10,000 mAh, QC at least 18W, PD at least 18W),  **must include USB to type-c charge cable**) 
 
-**ONE** fuse holder **with at least one 5W fuse** (can be for car, motorcycle, or other type of machine)
+![host-and-port](media/portable_power_bank.png)
 
-**ONE** simple on/off switch 
+## ONE fuse holder **with at least one 5W fuse** (can be for car, motorcycle, or other type of machine)
 
-**TWO** 3.7V 18650 Li-ion battery (at least 2,200 mAh)
+![host-and-port](media/)
 
-**ONE** battery holder for your two 18650 Li-ion batteries **or two battery holder each for oneindividual battery**
+## ONE simple on/off switch 
 
-**ONE** USB webcam 
+## TWO 3.7V 18650 Li-ion battery (at least 2,200 mAh)
 
-**ONE PACK** of male-to-female jumper cables 
+## ONE battery holder for your two 18650 Li-ion batteries **or two battery holder each for oneindividual battery**
 
-**ONE PACK** of female-to-female jumper cables
+## ONE USB webcam 
 
-**ONE** chassis with **FOUR** DC gear motors (easy to find at hobby shops)
+## ONE PACK of male-to-female jumper cables 
+
+## ONE PACK of female-to-female jumper cables
+
+## ONE chassis with **FOUR** DC gear motors (easy to find at hobby shops)
 
 We will not include instructions on how to make your own chassis, these can be bought ready-made or assembled easily from a small rectangle of sheet metal and some simple tools. 
 
