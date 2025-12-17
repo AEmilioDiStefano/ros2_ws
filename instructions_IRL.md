@@ -50,6 +50,10 @@ By the end of this instructional you will have built **your own differential dri
 
 ## ONE battery holder for your two 18650 Li-ion batteries **or two battery holder each for oneindividual battery**
 
+![host-and-port](media/li-ion_battery_holders.jpeg) 
+<br>
+(depicted above is one example of a viable option, your batteries may look different)
+
 ## ONE USB webcam 
 
 ## ONE PACK of male-to-female jumper cables 
