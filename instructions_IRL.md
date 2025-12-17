@@ -31,7 +31,7 @@ By the end of this instructional you will have built **your own differential dri
 
 ## ONE fuse holder **with at least one 5W fuse** (can be for car, motorcycle, or other type of machine)
 
-![host-and-port](media/)
+![host-and-port](media/holder_and_fuse_1.jpeg) ![host-and-port](media/holder_and_fuse_2_insertion.jpeg)
 <br>
 (depicted above is one example of a viable option, your fuse and fuse holder may look different)
 
