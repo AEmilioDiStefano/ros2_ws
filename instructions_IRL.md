@@ -22,7 +22,7 @@ By the end of this instructional you will have built **your own differential dri
 
 **TWO** 3.7V 18650 Li-ion battery (at least 2,200 mAh)
 
-**ONE** battery holder for your 18650 Li-ion batteries 
+**ONE** battery holder for your two 18650 Li-ion batteries **or two battery holder each for oneindividual battery**
 
 **ONE** USB webcam 
 
