@@ -133,5 +133,11 @@ The GPIO pins on the Raspberry Pi will connect to the pins on your L298N Motor C
 
 
 
+These connections are depicted below:
+
+![host-and-port](media/GPIO_to_controller_2.jpeg) ![host-and-port](media/GPIO_to_controller_3.jpeg)
+
+
+
 
 
