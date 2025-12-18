@@ -10,7 +10,7 @@
 **Note:** A file called **_waterworld.sdf_** is referenced throughout this document.  If the world that you are trying to open is not named **_waterworld.sdf_**, then replace **_waterworld.sdf_** with **the name of your world file** when entering these commands.
 
 ```shell
-git clone https://github.com/AEmilioDiStefano/ros2_ws.git
+git clone -b real_world --single-branch https://github.com/AEmilioDiStefano/ros2_ws.git
 ```
 <br>
 
