@@ -8,7 +8,7 @@ By the end of this instructional you will have built **your own differential dri
 
 <br>
 
-## MATERIALS :gear:
+# MATERIALS :gear:
 
 ## ONE Raspberry Pi 4 with 4 gigs of RAM (we used Model B)
 
@@ -95,7 +95,7 @@ The outer shell of the robot in the GIF was made using a 3D printer, but this ca
 
 <br>
 
-## TOOLS :toolbox:
+# TOOLS :toolbox:
 
 Almost all of these tools can be replaced with basic household items, but we will include this list of tools for those who have them on-hand
 
@@ -109,9 +109,19 @@ Almost all of these tools can be replaced with basic household items, but we wil
 
 <br>
 
-## GPIO Pin Setup
+# PREPARE your SD card for the Raspberry Pi by flashing it with Ubuntu 24.04 Noble (server)
+
+### Use Raspberry Pi Imager
+
+**Then insert the SD into your Pi**
+
+<br>
+
+# GPIO Pin Setup
 
 ![host-and-port](media/GPIO_to_controller_1.jpeg)
+
+After **mounting the Pi and the Motor Controller onto the chassis**, it's time to wire everything together.
 
 The GPIO pins on the Raspberry Pi will connect to the pins on your L298N Motor Controller.  The controler used in this tutorial has pin labels **ENA, IN1, IN2, IN3, IN4, and ENB**.  These are the controler pins that look like the GPIO pins on your Raspberry Pi.  If your controler's pin labels are different, check the list below to see which of your pins 
 
