@@ -11,10 +11,11 @@ By the end of this instructional you will have built **your own differential dri
 # MATERIALS :gear:
 
 ## ONE Raspberry Pi 4 with 4 gigs of RAM (we used Model B)
-(You can **use another Pi model**, but the flash SD card **preparation will be slightly** different albeit self-explanatory)
 <br>
 ![host-and-port](media/raspberry_pi_picture_1.jpeg) ![host-and-port](media/raspberry_pi_picture_2_box.jpeg)
-
+<br>
+You can **use another Pi model**, but the flash SD card **preparation will be slightly** different (albeit **self-explanatory**)
+<br>
 
 ## ONE L298N Motor Controller
 
