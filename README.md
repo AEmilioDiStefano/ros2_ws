@@ -101,6 +101,7 @@ colcon build
 # :crossed_swords: :scream:
 ## 6. Execute your environment
 ```shell
+source /opt/ros/jazzy/setup.bash \
 source ~/ros2_ws/install/setup.bash
 ```
 
