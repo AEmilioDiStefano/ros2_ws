@@ -292,6 +292,18 @@ tree -L 4 ~/ros2_ws/src
 ```
 
 <br>
+
+# :robot: :scroll: :white_check_mark: 
+## Reconfigure Terminals for ROS2
+
+```shell
+unset ROS_LOCALHOST_ONLY
+export ROS_DOMAIN_ID=0
+source /opt/ros/jazzy/setup.bash
+source ~/ros2_ws/install/setup.bash
+```
+
+<br>
 <br>
 <br>
 <br>
