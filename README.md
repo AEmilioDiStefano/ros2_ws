@@ -1,6 +1,8 @@
 # FPV-Enabled Swarm Control Workspace
 
-![host-and-port](media/FPV_gif.gif)
+![host-and-port](media/FPV_gif.gif) 
+
+![host-and-port](media/hide-and-seek-GIF.gif)
 
 # :book:
 # SETUP INSTRUCTIONS
@@ -10,7 +12,7 @@
 **Note:** A file called **_waterworld.sdf_** is referenced throughout this document.  If the world that you are trying to open is not named **_waterworld.sdf_**, then replace **_waterworld.sdf_** with **the name of your world file** when entering these commands.
 
 ```shell
-git clone -b real_world --single-branch https://github.com/AEmilioDiStefano/ros2_ws.git
+git clone https://github.com/AEmilioDiStefano/ros2_ws.git
 ```
 <br>
 
@@ -99,6 +101,7 @@ colcon build
 # :crossed_swords: :scream:
 ## 6. Execute your environment
 ```shell
+source /opt/ros/jazzy/setup.bash \
 source ~/ros2_ws/install/setup.bash
 ```
 
@@ -119,6 +122,7 @@ source ~/ros2_ws/install/setup.bash
 cd ~/ros2_ws
 ```
 ```shell
+source /opt/ros/jazzy/setup.bash \
 source ~/ros2_ws/install/setup.bash
 ```
 ```shell
@@ -132,6 +136,7 @@ ros2 launch my_robot_bringup two_robots_waterworld_xacro.launch.py
 cd ~/ros2_ws
 ```
 ```shell
+source /opt/ros/jazzy/setup.bash \
 source ~/ros2_ws/install/setup.bash
 ```
 ```shell
@@ -145,6 +150,7 @@ ros2 run robot_legion_teleop_python legion_teleop_key
 cd ~/ros2_ws
 ```
 ```shell
+source /opt/ros/jazzy/setup.bash \
 source ~/ros2_ws/install/setup.bash
 ```
 ```shell
@@ -158,8 +164,10 @@ ros2 run robot_legion_teleop_python fpv_camera_mux
 cd ~/ros2_ws
 ```
 ```shell
+source /opt/ros/jazzy/setup.bash \
 source ~/ros2_ws/install/setup.bash
 ```
+
 ```shell
 ros2 topic echo /fpv_camera/image_raw \
   --qos-reliability best_effort \
@@ -215,10 +223,12 @@ source install/setup.bash
 ## Open RViz to show a visualization of your robot:
 ## 1. Colcon Build and source to make sure any changes are reflected accurately: 
 ```shell
-cd ~/ros2_ws
-colcon build
-source install/setup.bash
+cd ~/ros2_ws \
+colcon build \
+source /opt/ros/jazzy/setup.bash \
+source ~/ros2_ws/install/setup.bash
 ```
+
 ### 2. Open RViz with a visualization of your robot
 ```shell
 ros2 launch urdf_tutorial display.launch.py model:=/home/aemilio/ros2_ws/src/my_robot_description/urdf/my_robot.urdf.xacro
@@ -231,9 +241,10 @@ ros2 launch urdf_tutorial display.launch.py model:=/home/aemilio/ros2_ws/src/my_
 ## Open a Gazebo world with your robot within:
 ## 1. Colcon Build and source to make sure any changes are reflected accurately: 
 ```shell
-cd ~/ros2_ws
-colcon build
-source install/setup.bash
+cd ~/ros2_ws \
+colcon build \
+source /opt/ros/jazzy/setup.bash \
+source ~/ros2_ws/install/setup.bash
 ```
 ## 2. Run the launch file that opens our Gazebo world and spawns our robot within:
 ```shell
@@ -254,9 +265,10 @@ ros2 run robot_legion_teleop_python legion_teleop_key \
 ## Open a Gazebo world with the my_robot.urdf.xacro and another robot within (2 robots total):
 ## 1. Colcon Build and source to make sure any changes are reflected accurately: 
 ```shell
-cd ~/ros2_ws
-colcon build
-source install/setup.bash
+cd ~/ros2_ws \
+colcon build \
+source /opt/ros/jazzy/setup.bash \
+source ~/ros2_ws/install/setup.bash
 ```
 ## 2. Run our Python launch script that opens our Gazebo combat arena while spawning two robots within: one called my_robot and another called emiliobot: 
 ```shell
@@ -317,6 +329,7 @@ colcon build
 ```
 **Execute:**
 ```shell
+source /opt/ros/jazzy/setup.bash \
 source ~/ros2_ws/install/setup.bash
 ```
 ### 3. Now try launching again:
