@@ -179,9 +179,9 @@ The GPIO pins connected to the motor controller will be referenced in our code:
 
 In the following command, **replace <name>** with **the name you set for the Pi** when you flashed the Ubuntu image with **Raspberry Pi Imager**, and **replace <host>** with **the host name you set** when you flashed the Ubuntu image with **Raspberry Pi Imager**:
 
-<br>
-
-ssh <**name>**@**<host>**.local
+```shell
+ssh <name>@<host>.local
+```
 
 <br>
 
