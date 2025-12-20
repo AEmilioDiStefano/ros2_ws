@@ -97,6 +97,8 @@ We will not include instructions on how to make your own chassis, these can be b
 The outer shell of the robot in the GIF was made using a 3D printer, but this can be made by hand or made from a recycled plastic shell of any kind.
 
 <br>
+<br>
+<br>
 
 # TOOLS :toolbox:
 
@@ -111,16 +113,20 @@ Almost all of these tools can be replaced with basic household items, but we wil
 **ONE** hot silicone gun (or any thick adhesive)
 
 <br>
+<br>
+<br>
 
-# PREPARE your SD card for the Raspberry Pi by flashing it with Ubuntu 24.04 Noble (server)
+# 1. PREPARE your SD card for the Raspberry Pi by flashing it with Ubuntu 24.04 Noble (server)
 
 ### Use Raspberry Pi Imager
 
 **Then insert the SD into your Pi**
 
 <br>
+<br>
+<br>
 
-# GPIO Pin Setup
+# 2. Connect your Pi to your motor controller
 
 ![host-and-port](media/GPIO_to_controller_1.jpeg)
 
@@ -157,6 +163,33 @@ The GPIO pins connected to the motor controller will be referenced in our code:
 
 ![host-and-port](media/GPIO_code_1.png) ![host-and-port](media/GPIO_code_2.png)
 
+<br>
+<br>
+<br>
+
+# 3. Connect your motors to your motor controller 
+
+<br>
+<br>
+<br>
+
+# 4. Install required software onto your Raspberry Pi
+
+## 4.1 SSH into your Pi 
+
+In the following command, **replace <name>** with **the name you set for the Pi** when you flashed the Ubuntu image with **Raspberry Pi Imager**, and **replace <host>** with **the host name you set** when you flashed the Ubuntu image with **Raspberry Pi Imager**:
+
+<br>
+
+ssh <**name>**@**<host>**.local
+
+<br>
+
+
+
+<br>
+<br>
+<br>
 
 
 
