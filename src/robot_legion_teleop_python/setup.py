@@ -27,16 +27,13 @@ setup(
             'motor_driver_node = robot_legion_teleop_python.motor_driver_node:main',
 
             # Real-world camera node (emiliobot camera publisher)
-            'legion_camera = robot_legion_teleop_python.legion_camera_node:main',
+            'emiliobot_camera = robot_legion_teleop_python.legion_camera_node:main',
 
             # Gazebo reset utility
             'reset_gz = robot_legion_teleop_python.reset_gz:main',
 
             # FPV camera multiplexer (simulation + future robots)
             'fpv_camera_mux = robot_legion_teleop_python.fpv_camera_mux:main',
-
-            # USB camera node
-            'usb_camera_node = robot_legion_teleop_python.usb_camera_node:main',
         ],
     },
 )
