@@ -176,14 +176,95 @@ The GPIO pins connected to the motor controller will be referenced in our code:
 # 4. Install required software onto your Raspberry Pi
 
 ## 4.1 SSH into your Pi 
-
+<br>
 In the following command, **replace <name>** with **the name you set for the Pi** when you flashed the Ubuntu image with **Raspberry Pi Imager**, and **replace <host>** with **the host name you set** when you flashed the Ubuntu image with **Raspberry Pi Imager**:
 
 ```shell
 ssh <name>@<host>.local
+
 ```
 
+You will be prompted to enter **the password you set for the Pi** when you flashed the Ubuntu image with **Raspberry Pi Imager**
+
 <br>
+
+## 4.2 Install ROS 2 Jazzy (minimal) on the Pi
+<br>
+Enter the following commands to prepare your system:
+
+```shell
+sudo apt update && sudo apt upgrade -y
+
+# Set locale (if not already)
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+```
+
+Then install **build-essential* (includes a **C++ compiler**)
+
+```shell
+sudo apt-get update
+sudo apt-get install build-essential
+```
+
+Then add the ROS2 repo:
+
+```shell
+sudo apt install -y curl gnupg2 lsb-release
+
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+  -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
+| sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+sudo apt update
+sudo apt install -y ros-jazzy-ros-base python3-colcon-common-extensions
+
+```
+
+Now add sourcing to your .bashrc file on the Pi:
+
+```shell
+echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+
+```
+
+Add some packages for GPIO control, camera and CV bridge, and other tools:
+
+```shell
+sudo apt install -y python3-rpi.gpio python3-opencv \
+  ros-jazzy-cv-bridge ros-jazzy-image-transport \
+  ros-jazzy-geometry-msgs ros-jazzy-sensor-msgs ros-jazzy-std-msgs
+
+```
+
+## 4.3 Set Up ROS2 networking between your laptop and your Pi
+<br>
+Add these lines to the .bashrc file of both machines (Laptop and Pi):
+
+```shell
+# ROS 2 Jazzy
+source /opt/ros/jazzy/setup.bash
+
+# Same domain for laptop and Pi
+export ROS_DOMAIN_ID=17
+
+# Allow DDS to use the network (not localhost only)
+export ROS_LOCALHOST_ONLY=0
+
+```
+
+Then source .bashrc
+
+```shell
+source ~/.bashrc
+
+```
 
 
 
