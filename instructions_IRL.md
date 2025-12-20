@@ -243,6 +243,8 @@ sudo apt install -y python3-rpi.gpio python3-opencv \
 
 ```
 
+<br>
+
 ## 4.3 Set Up ROS2 networking between your laptop and your Pi
 <br>
 Add these lines to the .bashrc file of both machines (Laptop and Pi):
@@ -266,7 +268,59 @@ source ~/.bashrc
 
 ```
 
+<br>
 
+## 4.4 Clone the Robot Legion Teleop package
+<br>
+Clone this repository into your Raspberry Pi:
+
+<br>
+
+
+## 4.5 Enable GPIO Access (One-Time Setup)
+<br>
+The motor driver node uses Raspberry Pi GPIO. By default, Linux restricts GPIO hardware access, which will cause this error:
+
+```shell
+RuntimeError: No access to /dev/mem. Try running as root!
+
+```
+
+Add the current user to the GPIO group:
+
+```shell
+sudo usermod -aG gpio $USER
+
+```
+
+Then create a udev rule so GPIO is accessible to non-root users:
+
+```shell
+sudo usermod -aG gpio $USER
+
+```
+
+Reload these new rules and reboot
+
+```shell
+sudo tee /etc/udev/rules.d/99-gpiomem.rules >/dev/null <<'EOF'
+KERNEL=="gpiomem", GROUP="gpio", MODE="0660"
+EOF
+
+```
+
+**SSH back into your Raspbarry Pi** and confirm the changes
+
+```shell
+ls -l /dev/gpiomem
+
+```
+
+You should see **GPIO** and **crw-rw----** included in the output.
+
+<br>
+
+## 4.6
 
 <br>
 <br>
