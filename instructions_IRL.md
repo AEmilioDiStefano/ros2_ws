@@ -53,7 +53,7 @@ You can **use another Pi model**, but the flash SD card **preparation will be sl
 (depicted above is one example of a viable option, your batteries may look different)
 
 
-## ONE battery holder for your two 18650 Li-ion batteries **or two battery holder each for oneindividual battery**
+## *N* battery holders for your two 18650 Li-ion batteries **or two battery holder each for oneindividual battery**
 
 ![host-and-port](media/li-ion_battery_holders.jpeg) 
 <br>
