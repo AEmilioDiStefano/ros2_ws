@@ -202,7 +202,7 @@ export LANG=en_US.UTF-8
 
 ```
 
-Then install **build-essential* (includes a **C++ compiler**)
+Then install **build-essential** (includes a **C++ compiler**)
 
 ```shell
 sudo apt-get update
