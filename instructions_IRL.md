@@ -128,7 +128,7 @@ Almost all of these tools can be replaced with basic household items, but we wil
 
 # 2. Connect your Pi to your motor controller
 
-![host-and-port](media/GPIO_to_controller_1.jpeg)
+![host-and-port](media/PI_MC_all_1.jpg)
 
 After **mounting the Pi and the Motor Controller onto the chassis**, it's time to wire everything together.
 
