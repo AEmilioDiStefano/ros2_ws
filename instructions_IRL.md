@@ -46,7 +46,7 @@ You can **use another Pi model**, but the flash SD card **preparation will be sl
 (depicted above is one example of a viable option, your ON / OFF switch may look different)
 
 
-## AT LEAST TWO 3.7V 18650 Li-ion battery (at least 2,200 mAh) (make sure to get the bettery charger!)
+## AT LEAST TWO 3.7V 18650 Li-ion battery (at least 2,200 mAh) (make sure to also get the battery charger!)
 
 ![host-and-port](media/li-ion_batteries.jpeg) 
 <br>
