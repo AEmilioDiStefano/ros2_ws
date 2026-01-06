@@ -175,6 +175,8 @@ The GPIO pins connected to the motor controller will be referenced in our code:
 
 <br>
 
+![host-and-port](media/MC_motors_2.jpg)
+
 ![host-and-port](media/circuit_all.jpg)
 
 ![host-and-port](media/robot_guts_GIF.gif)
