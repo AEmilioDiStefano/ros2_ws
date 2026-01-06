@@ -161,7 +161,7 @@ These connections are depicted below:
 
 ![host-and-port](media/GPIO_to_controller_2.jpeg) 
 
-![host-and-port](media/[GPIO_to_controller_3.jpeg)
+![host-and-port](media/GPIO_closeup.jpg)
 
 The GPIO pins connected to the motor controller will be referenced in our code:
 
