@@ -174,6 +174,10 @@ The GPIO pins connected to the motor controller will be referenced in our code:
 # 3. Connect your motors to your motor controller 
 
 <br>
+
+![host-and-port](media/robot_guts_GIF.gif)
+
+<br>
 <br>
 <br>
 
