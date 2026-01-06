@@ -85,7 +85,9 @@ You can **use another Pi model**, but the flash SD card **preparation will be sl
 
 ## ONE chassis with **FOUR** DC gear motors (make sure to buy a wheel for each motor, 4 total)
 
-**These DC gear motors are easy to find at hobby shops**.  You can make your own chassis or buy an assembled chassis that already includes four motors similar to the yellow DC gear motors depicted below
+**These DC gear motors are easy to find at hobby shops**.  You can make your own chassis or buy an assembled chassis that already includes four motors similar to the yellow DC gear motors depicted below.
+
+The tracks in the image were 3D printed on a Creality K1C.  Hand-straightened paperclips were used as connectors for the track segments.
 
 ![host-and-port](media/motors_with_chassis.jpeg) 
 <br>
