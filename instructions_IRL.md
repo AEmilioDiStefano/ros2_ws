@@ -57,7 +57,7 @@ You can **use another Pi model**, but the flash SD card **preparation will be sl
 
 ![host-and-port](media/li-ion_battery_holders.jpeg) 
 <br>
-(depicted above is one example of a viable option, your batteries may look different)
+(depicted above is one example of a viable option, your battery holders may look different)
 
 
 ## ONE USB webcam 
