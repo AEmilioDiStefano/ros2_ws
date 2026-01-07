@@ -173,7 +173,10 @@ The GPIO pins connected to the motor controller will be referenced in our code:
 
 # 3. Connect your motors to your motor controller 
 
+## 4.1 
+
 <br>
+Take eight of your male-to-female _or male-to-male) 
 
 ![host-and-port](media/MC_motors_2.jpg)
 
