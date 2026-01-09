@@ -343,10 +343,20 @@ You should see **GPIO** and **crw-rw----** included in the output.
 
 ## 5.1 Open two different terminals (both will stay opened while you are contorlling your robot)
 
+## 5.2 In one terminal, SSH into the Raspberry Pi of your robot.  Once you're in, run the motor controller node with the following command:
+
+
 ```shell
 ros2 run robot_legion_teleop_python motor_driver_node
-
 ```
+
+## 5.3 In the other terminal, run the teleop node to control your robot:
+
+```shell
+ros2 run robot_legion_teleop_python legion_teleop_key   --ros-args -p startup_robot:=emiliobot
+```
+
+You may notice that the command above includes the name 'emiliobot'.  **This tutorial is currently in the process of being edited as we perform updates** such as **using a namespace rather than a robot name like 'emiliobot'**.  The appropriate changes to this tutorial will be made when the updating of the **robot_legion_teleop_python** package is complete.
 
 <br>
 <br>
