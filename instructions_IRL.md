@@ -334,8 +334,19 @@ ls -l /dev/gpiomem
 You should see **GPIO** and **crw-rw----** included in the output.
 
 <br>
+<br>
+<br>
 
-## 4.6
+# 5. Start and control your robot 
+
+<br>
+
+## 5.1 Open two different terminals (both will stay opened while you are contorlling your robot)
+
+```shell
+ros2 run robot_legion_teleop_python motor_driver_node
+
+```
 
 <br>
 <br>
