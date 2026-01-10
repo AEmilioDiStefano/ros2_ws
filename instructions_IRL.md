@@ -367,7 +367,7 @@ git clone https://github.com/AEmilioDiStefano/ros2_ws.git
 cd ros2_ws
 ```
 
-**The other terminal**, enter your existing ros2_ws directory:
+**The other terminal (on your laptop)**, enter your existing ros2_ws directory:
 
 ```shell
 cd ros2_ws
