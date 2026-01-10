@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Dict
+from typing import Dict, Optional
 
 import rclpy
 from rclpy.node import Node
@@ -9,64 +9,73 @@ from std_msgs.msg import String
 
 class FpvCameraMux(Node):
     def __init__(self):
-        super().__init__('fpv_camera_mux')
+        super().__init__("fpv_camera_mux")
 
-        # Known robots / camera topics (expand later as needed)
-        self.robot_camera_topics: Dict[str, str] = {
-            'emiliobot': '/emiliobot/camera/image_raw',
-            'my_robot': '/my_robot/camera/image_raw',
-        }
+        # Active robot name (teleop publishes this)
+        self.active_robot: Optional[str] = None
 
-        # Subscribers for each robot camera
-        self.camera_subscribers: Dict[str, rclpy.subscription.Subscription] = {}
+        # Active camera subscription
+        self.camera_sub: Optional[rclpy.subscription.Subscription] = None
+        self.current_camera_topic: Optional[str] = None
 
-        # Latest frames
-        self.latest_frames: Dict[str, Image] = {}
-
-        # Active robot
-        self.active_robot = 'emiliobot'
+        # Latest frame
+        self.latest_frame: Optional[Image] = None
 
         # Output publisher
-        self.output_pub = self.create_publisher(Image, '/fpv_camera/image_raw', 10)
+        self.output_pub = self.create_publisher(Image, "/fpv_camera/image_raw", 10)
 
-        # Subscribe to active robot topic
+        # Subscribe to teleop robot selection
         self.active_robot_sub = self.create_subscription(
             String,
-            '/teleop/active_robot',
+            "/teleop/active_robot",
             self.active_robot_callback,
-            10
+            10,
         )
-
-        # Camera subscriptions
-        for robot_name, topic in self.robot_camera_topics.items():
-            sub = self.create_subscription(
-                Image,
-                topic,
-                lambda msg, name=robot_name: self.camera_callback(msg, name),
-                10
-            )
-            self.camera_subscribers[robot_name] = sub
 
         # Timer to republish active frame
         self.timer = self.create_timer(0.05, self.timer_callback)  # 20 Hz
 
-        self.get_logger().info('FPV camera mux initialized.')
+        self.get_logger().info("FPV camera mux initialized (robot-agnostic).")
+
+    def _set_camera_subscription(self, robot_name: str):
+        camera_topic = f"/{robot_name}/camera/image_raw"
+
+        if self.current_camera_topic == camera_topic:
+            return
+
+        # Destroy prior subscription (if any)
+        if self.camera_sub is not None:
+            try:
+                self.destroy_subscription(self.camera_sub)
+            except Exception:
+                pass
+            self.camera_sub = None
+
+        self.latest_frame = None
+        self.current_camera_topic = camera_topic
+
+        self.camera_sub = self.create_subscription(
+            Image,
+            camera_topic,
+            self.camera_callback,
+            10,
+        )
+
+        self.get_logger().info(f"FPV now listening to camera topic: {camera_topic}")
 
     def active_robot_callback(self, msg: String):
-        if msg.data in self.robot_camera_topics:
-            self.active_robot = msg.data
-            self.get_logger().info(f'FPV active robot set to: {self.active_robot}')
-        else:
-            self.get_logger().warn(f'Unknown robot name in active_robot message: {msg.data}')
+        robot = msg.data.strip()
+        if not robot:
+            return
+        self.active_robot = robot
+        self._set_camera_subscription(robot)
 
-    def camera_callback(self, msg: Image, robot_name: str):
-        self.latest_frames[robot_name] = msg
+    def camera_callback(self, msg: Image):
+        self.latest_frame = msg
 
     def timer_callback(self):
-        # Republish the latest frame for the active robot
-        frame = self.latest_frames.get(self.active_robot, None)
-        if frame is not None:
-            self.output_pub.publish(frame)
+        if self.latest_frame is not None:
+            self.output_pub.publish(self.latest_frame)
 
 
 def main(args=None):
@@ -81,5 +90,5 @@ def main(args=None):
         rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

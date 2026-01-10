@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import time
+import getpass
 
 import rclpy
 from rclpy.node import Node
@@ -14,16 +15,21 @@ except ImportError:
 
 class MotorDriverNode(Node):
     def __init__(self):
-        super().__init__('motor_driver_node')
+        super().__init__("motor_driver_node")
+
+        # Robot naming
+        self.declare_parameter("robot_name", getpass.getuser())
+        self.robot_name = self.get_parameter("robot_name").value.strip() or getpass.getuser()
 
         # Parameters
-        self.declare_parameter('wheel_separation', 0.18)   # meters
-        self.declare_parameter('max_linear_speed', 0.4)    # m/s
-        self.declare_parameter('max_angular_speed', 2.0)   # rad/s
-        self.declare_parameter('max_pwm', 100)             # percent
+        self.declare_parameter("wheel_separation", 0.18)   # meters
+        self.declare_parameter("max_linear_speed", 0.4)    # m/s
+        self.declare_parameter("max_angular_speed", 2.0)   # rad/s
+        self.declare_parameter("max_pwm", 100)             # percent
 
-        self.declare_parameter('cmd_vel_topic', '/emiliobot/cmd_vel')
-        self.cmd_vel_topic = self.get_parameter('cmd_vel_topic').value
+        # Topic this robot listens to
+        self.declare_parameter("cmd_vel_topic", f"/{self.robot_name}/cmd_vel")
+        self.cmd_vel_topic = self.get_parameter("cmd_vel_topic").value.strip() or f"/{self.robot_name}/cmd_vel"
 
         # GPIO pins (BCM)
         self.EN_A = 12
@@ -39,9 +45,7 @@ class MotorDriverNode(Node):
         if GPIO_AVAILABLE:
             self._setup_gpio()
         else:
-            self.get_logger().warn(
-                'RPi.GPIO not available. Motors will NOT move.'
-            )
+            self.get_logger().warn("RPi.GPIO not available. Motors will NOT move.")
 
         # Subscriber
         self.subscription = self.create_subscription(
@@ -56,7 +60,7 @@ class MotorDriverNode(Node):
         self.timeout_sec = 0.5
         self.create_timer(0.1, self._watchdog)
 
-        self.get_logger().info(f"Motor driver listening on {self.cmd_vel_topic}")
+        self.get_logger().info(f"[{self.robot_name}] Motor driver listening on {self.cmd_vel_topic}")
 
     # --------------------------------------------------
 
@@ -81,23 +85,21 @@ class MotorDriverNode(Node):
     def cmd_vel_callback(self, msg: Twist):
         self.last_cmd_time = time.time()
 
-        wheel_sep = float(self.get_parameter('wheel_separation').value)
-        max_lin = float(self.get_parameter('max_linear_speed').value)
-        max_ang = float(self.get_parameter('max_angular_speed').value)
+        wheel_sep = float(self.get_parameter("wheel_separation").value)
+        max_lin = float(self.get_parameter("max_linear_speed").value)
+        max_ang = float(self.get_parameter("max_angular_speed").value)
 
         v = max(-max_lin, min(max_lin, msg.linear.x))
         w = max(-max_ang, min(max_ang, msg.angular.z))
 
         # ===============================
-        # TANK-SPIN OVERRIDE (IMPORTANT)
+        # TANK-SPIN OVERRIDE
         # ===============================
         if abs(v) < 1e-3 and abs(w) > 1e-3:
-            spin_speed = 0.7 * max_lin  # strong enough to overcome friction
+            spin_speed = 0.7 * max_lin
             direction = 1.0 if w > 0.0 else -1.0
-
             v_left = -direction * spin_speed
             v_right = +direction * spin_speed
-
             self._set_motor_outputs(v_left, v_right)
             return
 
@@ -106,7 +108,6 @@ class MotorDriverNode(Node):
         # ===============================
         v_left = v - (w * wheel_sep / 2.0)
         v_right = v + (w * wheel_sep / 2.0)
-
         self._set_motor_outputs(v_left, v_right)
 
     # --------------------------------------------------
@@ -121,8 +122,8 @@ class MotorDriverNode(Node):
         if not GPIO_AVAILABLE:
             return
 
-        max_lin = float(self.get_parameter('max_linear_speed').value)
-        max_pwm = float(self.get_parameter('max_pwm').value)
+        max_lin = float(self.get_parameter("max_linear_speed").value)
+        max_pwm = float(self.get_parameter("max_pwm").value)
 
         def speed_to_pwm(v):
             ratio = max(-1.0, min(1.0, v / max_lin))
@@ -167,5 +168,5 @@ def main(args=None):
         rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
