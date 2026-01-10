@@ -341,18 +341,59 @@ You should see **GPIO** and **crw-rw----** included in the output.
 
 <br>
 
-### 5.1 Open two different terminals (both will stay opened while you are contorlling your robot)
+### 5.1 Turn on your robot
+
+**Turn on the power bank** that powers the Raspberry Pi
+
+**Switch on** the 'ON' switch for your motors and motor controller.
+
+** Wait about 120 seconds** for the Pi to get online
 
 <br>
 
-### 5.2 In one terminal, SSH into the Raspberry Pi of your robot.  Once you're in, run the motor controller node with the following command:
+### 5.2 Open two different terminals 
+
+**Both will stay opened** while you are controlling your robot
+
+**In one temrinal**, SSH into your robot's Raspberry Pi and clone this workspace into your Pi:
+
+```shell
+git clone https://github.com/AEmilioDiStefano/ros2_ws.git
+```
+
+**Now enter the newly cloned ros2_ws directory**:
+
+```shell
+cd ros2_ws
+```
+
+**The other terminal**, enter your existing ros2_ws directory:
+
+```shell
+cd ros2_ws
+```
+
+<br>
+
+**In both terminals**, enter the  run the following command:
+
+```shell
+unset ROS_LOCALHOST_ONLY
+export ROS_DOMAIN_ID=0
+source /opt/ros/jazzy/setup.bash
+source ~/ros2_ws/install/setup.bash
+```
+
+<br>
+
+### 5.3 On your Pi, run the motor controller node with the following command:
 
 
 ```shell
 ros2 run robot_legion_teleop_python motor_driver_node
 ```
 
-### 5.3 In the other terminal, run the teleop node to control your robot:
+### 5.4 On your laptop, run the teleop node to control your robot:
 
 ```shell
 ros2 run robot_legion_teleop_python legion_teleop_key   --ros-args -p startup_robot:=emiliobot
