@@ -355,7 +355,7 @@ You should see **GPIO** and **crw-rw----** included in the output.
 
 **Both will stay opened** while you are controlling your robot
 
-**In one terminal**, SSH into your robot's Raspberry Pi and clone **the minimal version of this workspace** into your Pi:
+**In one terminal**, SSH into your robot's Raspberry Pi and clone **the minimal version of the ros2_ws workspace** into your Pi:
 
 ```shell
 git clone https://github.com/AEmilioDiStefano/ros2_ws_minimal.git ros2_ws
