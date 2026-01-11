@@ -399,8 +399,6 @@ ros2 run robot_legion_teleop_python motor_driver_node
 ros2 run robot_legion_teleop_python legion_teleop_key
 ```
 
-You may notice that the command above includes the name 'emiliobot'.  **This tutorial is currently in the process of being edited as we perform updates** such as **using a namespace rather than a robot name like 'emiliobot'**.  The appropriate changes to this tutorial will be made when the updating of the **robot_legion_teleop_python** package is complete.
-
 <br>
 <br>
 <br>
