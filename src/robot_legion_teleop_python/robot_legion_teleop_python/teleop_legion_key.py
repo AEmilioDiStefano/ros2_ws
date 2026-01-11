@@ -147,52 +147,62 @@ class RobotLegionTeleop(Node):
 
         # Start with instructions + robot picker
         self._print_instructions(None)
-        print("[STARTUP] Discovering robots on the ROS 2 network...")
+        print("[STARTUP] Discovering robots...")
         # Robot selection will happen inside run() so we can safely use input()
 
     # ---------------- Printing ----------------
 
     def _print_instructions(self, topic_name: Optional[str]):
-        print("--------------------------------------------------")
-        print(" Robot Legion Teleop (Python) - Robot-Agnostic")
-        print("--------------------------------------------------")
+        print("-------------------------------")
+        print("      ROBOT LEGION TELEOP      ")
+        print("-------------------------------")
         if topic_name:
             print(f"Publishing Twist on: {topic_name}")
         else:
-            print("Publishing Twist on: (none yet) - you will select a robot")
+            print("SELECT A ROBOT")
         print(f"allow_cmd_vel_switching: {self.allow_cmd_vel_switching}")
-        print(f"wheel_separation (for circle turns): {self.wheel_separation:.3f} m")
+        print(f"wheel_separation (for circle turns): {self.wheel_separation:.2f} m")
         if self.current_robot_name:
-            print(f"Active robot: {self.current_robot_name}")
+            print(f"ACTIVE ROBOT: {self.current_robot_name}")
         print("")
-        print("Movement:")
-        print("  8 forward, 2 backward")
-        print("  4 rotate-left (in-place), 6 rotate-right (in-place)")
-        print("  7 forward-left circle  (RIGHT track only)")
-        print("  9 forward-right circle (LEFT  track only)")
-        print("  1 backward-left circle (RIGHT track only)")
-        print("  3 backward-right circle(LEFT  track only)")
-        print("  Arrow keys also work")
+        print("MOVEMENT:")
+        print("  8 forward")
+        print("  2 backward")
+        print("  4 rotate-left")
+        print("  6 rotate-right")
+        print("  7 circle forward-left")
+        print("  9 circle forward-right")
+        print("  1 circle backward-left")
+        print("  3 circle backward-right")
         print("")
-        print("Stop:")
-        print("  [SPACE], 's', or 5")
+        print("ARROW KEYS ALSO WORK")
+        print(" [UP] forward")
+        print(" [DOWN] backward")
+        print(" [LEFT] rotate left")
+        print(" [RIGHT] rotate right")
         print("")
-        print("Speed profiles:")
+        print("STOP:")
+        print("  [SPACE] OR 's' OR 5")
+        print("")
+        print("SPEED PROFILES:")
         print("  i slow, o medium, p fast")
         print("")
         print("Speed scaling:")
-        print("  w/+ increase both, e/- decrease both")
-        print("  q// increase linear, r/* decrease linear")
+        print("  q OR / increase linear")
+        print("  r OR * decrease linear")
+        print("  w OR + increase speed")
+        print("  e OR - decrease speed")
+
         print("")
         print("Robot selection:")
-        print("  m choose robot (publishes to /<robot>/cmd_vel)")
+        print("  m choose robot")
         print("")
         print("CTRL-C to quit.")
-        print("--------------------------------------------------")
+        print("-------------------------------")
         self._print_current_speeds()
 
     def _print_current_speeds(self):
-        print(f"Linear Speed: {self.linear_speed:.3f}  Angular Speed: {self.angular_speed:.3f}")
+        print(f"Linear Speed: {self.linear_speed:.2f}  Angular Speed: {self.angular_speed:.2f}")
 
     # ---------------- Discovery helpers ----------------
 
@@ -224,15 +234,27 @@ class RobotLegionTeleop(Node):
 
     def _print_robot_list(self, robots: List[str]):
         print("")
-        print("==== Available robots (subscribers on /<robot>/cmd_vel) ====")
+        print("======= AVAILABLE ROBOTS =======")
         if not robots:
+            print("")
             print("  (none found)")
-            print("  - Make sure each robot is on the same ROS_DOMAIN_ID and network.")
-            print("  - Make sure motor_driver_node is running on each robot.")
+            print("")
+            print("  - Try 'r' to refresh")
+            print("")
+            print("  - Make sure each robot  is")
+            print("    on the same ROS_DOMAIN_ID")
+            print("    and network.")
+            print("")
+            print("  - Make sure your robots are ")
+            print("    currently running at least")
+            print("    one node.")
+            print("")
         else:
             for r in robots:
+                print("")
                 print(f"  - {r}")
-        print("===========================================================")
+                print("")
+        print("================================")
         print("")
 
     def _validate_robot_name(self, name: str) -> Tuple[bool, str]:
