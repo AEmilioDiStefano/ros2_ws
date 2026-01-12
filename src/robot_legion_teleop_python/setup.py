@@ -25,17 +25,9 @@ setup(
             # Real robot motor driver (L298N + yellow motors)
             "motor_driver_node = robot_legion_teleop_python.motor_driver_node:main",
 
-            # Camera node (robot-agnostic)
-            "legion_camera_node = robot_legion_teleop_python.legion_camera_node:main",
-
-            # Backward-compatible alias (old name)
-            "emiliobot_camera = robot_legion_teleop_python.legion_camera_node:main",
-
             # Gazebo reset utility
             "reset_gz = robot_legion_teleop_python.reset_gz:main",
 
-            # FPV camera multiplexer (robot-agnostic)
-            "fpv_camera_mux = robot_legion_teleop_python.fpv_camera_mux:main",
         ],
     },
 )
