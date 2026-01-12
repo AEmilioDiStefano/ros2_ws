@@ -2,7 +2,7 @@ This is the minimal version of **AEmilioDistefano's ros2_ws repository**.  This 
 
 When cloning onto a Raspberry Pi, **always clone this repository rather than the full version of the ros2_ws repository**.
 
-# IRL Robot Setup (differential drive) 
+# DIY Robot Setup (differential drive) 
 
 By the end of this instructional you will have built **your own differential drive robot**, controllable via WiFi with your keyboard and ready for autonomous functions
 
@@ -152,7 +152,7 @@ The GPIO pins on the Raspberry Pi will connect to the pins on your L298N Motor C
 
 **ENB** is also sometimes labeled as **ENB**, **EN B**, **EB**, **PWM_B**, **PWMB**, **EN2**, **ENABLE_B**
 
-### Connect the following pins on the motor controller to the folowing pins on the Raspberry Pi:
+### 2.1 Connect the following pins on the motor controller to the folowing pins on the Raspberry Pi:
 
 **ENA** to **GPIO 12** AKA **Pin 32** AKA **PWM0** 
 
@@ -182,12 +182,17 @@ The GPIO pins connected to the motor controller will be referenced in our code:
 
 # 3. Connect your motors to your motor controller 
 
-## 3.1 
+## 3.1 Take eight of your male-to-female (or male-to-male) jumper cables and perform the following connections:
 
 <br>
-Take eight of your male-to-female (or male-to-male) jumper cables and perform the following connections:
 
-![host-and-port](media/MC_motors_2.jpg)
+![host-and-port](media/MC_motors_2.jpg) 
+
+<br>
+<br>
+<br>
+
+# 4. 
 
 ![host-and-port](media/circuit_all.jpg)
 
@@ -197,9 +202,9 @@ Take eight of your male-to-female (or male-to-male) jumper cables and perform th
 <br>
 <br>
 
-# 4. Install required software onto your Raspberry Pi
+# 5. Install required software onto your Raspberry Pi
 
-## 4.1 SSH into your Pi 
+## 5.1 SSH into your Pi 
 <br>
 In the following command, replace **name** with **the name you set for the Pi** when you flashed the Ubuntu image with **Raspberry Pi Imager**, and **replace <host>** with **the host name you set** when you flashed the Ubuntu image with **Raspberry Pi Imager** (DO NOT include the pointed brackets / carrot symbols):
 
@@ -212,7 +217,7 @@ You will be prompted to enter **the password you set for the Pi** when you flash
 
 <br>
 
-## 4.2 Install ROS 2 Jazzy (minimal) on the Pi
+## 5.2 Install ROS 2 Jazzy (minimal) on the Pi
 <br>
 Enter the following commands to prepare your system:
 
@@ -269,7 +274,7 @@ sudo apt install -y python3-rpi.gpio python3-opencv \
 
 <br>
 
-## 4.3 Set Up ROS2 networking between your laptop and your Pi
+## 5.3 Set Up ROS2 networking between your laptop and your Pi
 <br>
 Add these lines to the .bashrc file of both machines (Laptop and Pi):
 
@@ -294,7 +299,7 @@ source ~/.bashrc
 
 <br>
 
-## 4.4 Clone the Robot Legion Teleop package
+## 5.4 Clone the Robot Legion Teleop package
 <br>
 Clone this repository into your Raspberry Pi:
 
@@ -305,7 +310,7 @@ git clone https://github.com/AEmilioDiStefano/ros2_ws_minimal.git ros2_ws
 <br>
 
 
-## 4.5 Enable GPIO Access (One-Time Setup)
+## 5.5 Enable GPIO Access (One-Time Setup)
 <br>
 The motor driver node uses Raspberry Pi GPIO. By default, Linux restricts GPIO hardware access, which will cause this error:
 
@@ -350,11 +355,11 @@ You should see **GPIO** and **crw-rw----** included in the output.
 <br>
 <br>
 
-# 5. Start and control your robot 
+# Start and control your robot 
 
 <br>
 
-### 5.1 Turn on your robot
+## 1. Power up your robot
 
 **Turn on the power bank** that powers the Raspberry Pi
 
@@ -364,15 +369,11 @@ You should see **GPIO** and **crw-rw----** included in the output.
 
 <br>
 
-### 5.2 Open two different terminals 
+## 2. Open two different terminals 
 
 **Both will stay opened** while you are controlling your robot
 
-**In one terminal**, SSH into your robot's Raspberry Pi and **if yuou don't already have it**, clone **the minimal version of the ros2_ws workspace** into your Pi:
-
-```shell
-git clone https://github.com/AEmilioDiStefano/ros2_ws_minimal.git ros2_ws
-```
+**In one terminal**, SSH into your robot's Raspberry Pi
 
 **Now enter the newly cloned ros2_ws directory**:
 
@@ -380,7 +381,15 @@ git clone https://github.com/AEmilioDiStefano/ros2_ws_minimal.git ros2_ws
 cd ros2_ws
 ```
 
-**The other terminal (on your laptop)**, enter your existing ros2_ws directory:
+**IF YOU DO NOT HAVE THIS DIRECTORY**, clone **the minimal version of the ros2_ws workspace** onto your Pi:
+
+```shell
+git clone https://github.com/AEmilioDiStefano/ros2_ws_minimal.git ros2_ws
+```
+
+
+
+**In the other terminal (on your laptop)**, enter your existing ros2_ws directory:
 
 ```shell
 cd ros2_ws
@@ -405,14 +414,18 @@ source ~/ros2_ws/install/setup.bash
    - Sources **your workspace's setup.bash** from the install directory (this is generated when you **colcon build**)
 <br>
 
-### 5.3 On your Pi, run the motor controller node with the following command:
+## 3. On your Pi, run the motor controller node with the following command:
 
 
 ```shell
 ros2 run robot_legion_teleop_python motor_driver_node
 ```
 
-### 5.4 On your laptop, run the teleop node to control your robot:
+<br>
+<br>
+<br>
+
+## 4. On your laptop, run the teleop node to control your robot:
 
 ```shell
 ros2 run robot_legion_teleop_python legion_teleop_key
@@ -422,6 +435,32 @@ ros2 run robot_legion_teleop_python legion_teleop_key
 <br>
 <br>
 
+## 5. Play hide-and-seek with your cat 
 
+<br> 
+
+![host-and-port](media/hide-and-seek-GIF.gif) 
+
+<br>
+
+**Make sure the terminal running the teleop node is selected** (click anywhere inside the terminal itself)
+
+<br>
+
+**Use the arrow keys for direction** and the spacebar to stop.  You can also use your **numpad with numlock** on to control as follows:
+
+**8** to **GO FORWARD**  
+**2** to **GO BACKWARD**  
+**4** to **ROTATE LEFT**  
+**6** to **ROTATE RIGHT**  
+
+**7** to **CIRCLE LEFT FORWARD**  
+**9** to **CIECLE RIGHT FORWARD**  
+**1** to **CIRCLE LEFT BACKWARD**  
+**3** to **CIRCLE RIGHT BACKWARD**  
+
+**5** to **STOP**  
+
+<br>
 
 
