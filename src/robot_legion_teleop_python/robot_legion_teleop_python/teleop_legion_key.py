@@ -43,6 +43,7 @@ import sys
 import select
 import termios
 import tty
+import time
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -208,6 +209,25 @@ class RobotLegionTeleop(Node):
             set_raw_mode()
         except Exception:
             pass
+
+    # ---------------- ROS graph warm-up (startup discovery fix) ----------------
+
+    def _warmup_discovery(self, timeout_sec: float = 1.0, spin_step_sec: float = 0.1):
+        """
+        Warm up DDS/ROS graph discovery so get_topic_names_and_types() /
+        get_subscriptions_info_by_topic() are correct on first display.
+
+        Why this exists:
+        - On startup, the ROS graph cache may not yet include remote peers.
+        - If we query immediately, we may see (none found) even though robots exist.
+        - A short spin_once loop processes discovery traffic and populates the graph.
+        """
+        deadline = time.monotonic() + max(0.0, float(timeout_sec))
+        while rclpy.ok() and time.monotonic() < deadline:
+            rclpy.spin_once(self, timeout_sec=float(spin_step_sec))
+            # Stop early as soon as we see any available robot
+            if self.list_available_robots():
+                return
 
     # ---------------- State for easy web integration ----------------
 
@@ -509,7 +529,14 @@ class RobotLegionTeleop(Node):
         """
         Print robots, prompt until user enters a valid robot name.
         """
+        first_pass = True
+
         while rclpy.ok():
+            # Warm up discovery so the initial list is correct on startup.
+            if first_pass:
+                self._warmup_discovery(timeout_sec=1.0)
+                first_pass = False
+
             robots = self.list_available_robots()
             self._tprint(self.render_robot_list(robots))
 
@@ -526,6 +553,8 @@ class RobotLegionTeleop(Node):
             set_raw_mode()
 
             if user_input.lower() == "r":
+                # Also warm up on refresh so the very next listing is accurate.
+                self._warmup_discovery(timeout_sec=0.5)
                 continue
 
             ok, topic = self._validate_robot_name(user_input)
