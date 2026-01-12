@@ -2,7 +2,7 @@
 """
 teleop_legion_key.py
 
-Keyboard teleop for swarm robotics applications (robot-agnostic)
+Keyboard teleop for swarm robotics applications 
 
 Core behaviors:
 - Robots are identified by "robot name" (default = Linux username on robot)
@@ -30,6 +30,12 @@ Circle turns (smallest radius; ONE TRACK ONLY):
 - 9 forward-right : LEFT track forward, RIGHT track stopped
 - 1 backward-left : RIGHT track backward, LEFT track stopped
 - 3 backward-right: LEFT track backward, RIGHT track stopped
+
+Terminal reliability note:
+- This program reads keys in RAW mode for instant keypress capture.
+- Printing while RAW is active can cause newline behavior that "drifts" output rightward
+  (because \n may not return to column 0).
+- We fix that by ALWAYS printing in cooked mode, then returning to raw.
 """
 
 import re
@@ -37,7 +43,8 @@ import sys
 import select
 import termios
 import tty
-from typing import List, Optional, Set, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Set, Tuple
 
 import rclpy
 from rclpy.node import Node
@@ -48,27 +55,45 @@ from std_msgs.msg import String
 CMD_VEL_RE = re.compile(r"^/([^/]+)/cmd_vel$")
 
 
-def get_key(settings):
-    """Read a single keypress (with arrow-key escape sequence support)."""
-    tty.setraw(sys.stdin.fileno())
-    rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-    if rlist:
-        key = sys.stdin.read(1)
-        if key == "\x1b":  # start of escape sequence
-            key += sys.stdin.read(2)
-        return key
-    return ""
-
-
 def restore_terminal_settings(settings):
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+
+
+def set_raw_mode():
+    tty.setraw(sys.stdin.fileno())
+
+
+def read_key_raw(timeout_s: float = 0.1) -> str:
+    """
+    Read a single keypress (with arrow-key escape sequence support).
+    Assumes terminal is already in raw mode.
+    """
+    rlist, _, _ = select.select([sys.stdin], [], [], timeout_s)
+    if not rlist:
+        return ""
+    key = sys.stdin.read(1)
+    if key == "\x1b":  # start of escape sequence
+        # Typical arrow keys arrive as ESC [ A/B/C/D (3 chars total including ESC)
+        key += sys.stdin.read(2)
+    return key
+
+
+@dataclass
+class TeleopState:
+    available_robots: List[str]
+    active_robot: Optional[str]
+    cmd_vel_topic: Optional[str]
+    linear_speed: float
+    angular_speed: float
+    allow_cmd_vel_switching: bool
+    wheel_separation: float
 
 
 class RobotLegionTeleop(Node):
     def __init__(self):
         super().__init__("robot_legion_teleop_python")
 
-        # Optional parameters (kept, but now robot selection is interactive by default)
+        # Optional parameters
         self.declare_parameter("allow_cmd_vel_switching", True)
         self.allow_cmd_vel_switching = bool(self.get_parameter("allow_cmd_vel_switching").value)
 
@@ -145,64 +170,156 @@ class RobotLegionTeleop(Node):
         self.create_timer(0.1, self._republish_last_twist)
         self.create_timer(0.5, self._offline_watchdog)
 
-        # Start with instructions + robot picker
-        self._print_instructions(None)
-        print("[STARTUP] Discovering robots...")
-        # Robot selection will happen inside run() so we can safely use input()
+        # Initial UI
+        self._tprint(self.render_instructions(topic_name=None))
+        self._tprint("[STARTUP] Discovering robots...")
 
-    # ---------------- Printing ----------------
+    # ---------------- Terminal output (cooked mode only) ----------------
 
-    def _print_instructions(self, topic_name: Optional[str]):
-        print("-------------------------------")
-        print("      ROBOT LEGION TELEOP      ")
-        print("-------------------------------")
-        if topic_name:
-            print(f"Publishing Twist on: {topic_name}")
+    def _tprint(self, text: str = ""):
+        """
+        Print reliably even while the program uses RAW mode for keypress reading.
+        We temporarily restore "cooked" terminal settings for printing.
+        """
+        # If stdin isn't a tty, just print normally (useful for piping/logging)
+        if not sys.stdin.isatty():
+            print(text)
+            sys.stdout.flush()
+            return
+
+        try:
+            # Put terminal back to cooked for correct newline behavior
+            restore_terminal_settings(self._terminal_settings)
+        except Exception:
+            # If settings aren't initialized yet, best effort print
+            print(text)
+            sys.stdout.flush()
+            return
+
+        # Normal printing in cooked mode
+        if text:
+            print(text)
         else:
-            print("SELECT A ROBOT")
-        print(f"allow_cmd_vel_switching: {self.allow_cmd_vel_switching}")
-        print(f"wheel_separation (for circle turns): {self.wheel_separation:.2f} m")
+            print("")
+        sys.stdout.flush()
+
+        # Back to raw so key reading continues to work
+        try:
+            set_raw_mode()
+        except Exception:
+            pass
+
+    # ---------------- State for easy web integration ----------------
+
+    def get_state(self) -> TeleopState:
+        robots = self.list_available_robots()
+        return TeleopState(
+            available_robots=robots,
+            active_robot=self.current_robot_name,
+            cmd_vel_topic=self.cmd_vel_topic,
+            linear_speed=self.linear_speed,
+            angular_speed=self.angular_speed,
+            allow_cmd_vel_switching=self.allow_cmd_vel_switching,
+            wheel_separation=self.wheel_separation,
+        )
+
+    def get_state_dict(self) -> Dict:
+        """
+        JSON-friendly dict version of state (plug-and-play for future HTTP/WebSocket API).
+        """
+        s = self.get_state()
+        return {
+            "available_robots": s.available_robots,
+            "active_robot": s.active_robot,
+            "cmd_vel_topic": s.cmd_vel_topic,
+            "linear_speed": s.linear_speed,
+            "angular_speed": s.angular_speed,
+            "allow_cmd_vel_switching": s.allow_cmd_vel_switching,
+            "wheel_separation": s.wheel_separation,
+        }
+
+    # ---------------- Renderers (return strings; terminal/web can reuse) ----------------
+
+    def render_instructions(self, topic_name: Optional[str]) -> str:
+        lines = []
+        lines.append("-------------------------------")
+        lines.append("      ROBOT LEGION TELEOP      ")
+        lines.append("-------------------------------")
+        if topic_name:
+            lines.append(f"Publishing Twist on: {topic_name}")
+        else:
+            lines.append("SELECT A ROBOT")
+        lines.append(f"allow_cmd_vel_switching: {self.allow_cmd_vel_switching}")
+        lines.append(f"wheel_separation (for circle turns): {self.wheel_separation:.2f} m")
         if self.current_robot_name:
-            print(f"ACTIVE ROBOT: {self.current_robot_name}")
-        print("")
-        print("MOVEMENT:")
-        print("  8 forward")
-        print("  2 backward")
-        print("  4 rotate-left")
-        print("  6 rotate-right")
-        print("  7 circle forward-left")
-        print("  9 circle forward-right")
-        print("  1 circle backward-left")
-        print("  3 circle backward-right")
-        print("")
-        print("ARROW KEYS ALSO WORK")
-        print(" [UP] forward")
-        print(" [DOWN] backward")
-        print(" [LEFT] rotate left")
-        print(" [RIGHT] rotate right")
-        print("")
-        print("STOP:")
-        print("  [SPACE] OR 's' OR 5")
-        print("")
-        print("SPEED PROFILES:")
-        print("  i slow, o medium, p fast")
-        print("")
-        print("Speed scaling:")
-        print("  q OR / increase linear")
-        print("  r OR * decrease linear")
-        print("  w OR + increase speed")
-        print("  e OR - decrease speed")
+            lines.append("")
+            lines.append(f"ACTIVE ROBOT: {self.current_robot_name}")
+        lines.append("")
+        lines.append("MOVEMENT:")
+        lines.append("  8 forward")
+        lines.append("  2 backward")
+        lines.append("  4 rotate-left")
+        lines.append("  6 rotate-right")
+        lines.append("  7 circle forward-left")
+        lines.append("  9 circle forward-right")
+        lines.append("  1 circle backward-left")
+        lines.append("  3 circle backward-right")
+        lines.append("")
+        lines.append("ARROW KEYS ALSO WORK")
+        lines.append(" [UP] forward")
+        lines.append(" [DOWN] backward")
+        lines.append(" [LEFT] rotate left")
+        lines.append(" [RIGHT] rotate right")
+        lines.append("")
+        lines.append("STOP:")
+        lines.append("  [SPACE] OR 's' OR 5")
+        lines.append("")
+        lines.append("SPEED PROFILES:")
+        lines.append("  i slow, o medium, p fast")
+        lines.append("")
+        lines.append("Speed scaling:")
+        lines.append("  q OR / increase linear")
+        lines.append("  r OR * decrease linear")
+        lines.append("  w OR + increase speed")
+        lines.append("  e OR - decrease speed")
+        lines.append("")
+        lines.append("Robot selection:")
+        lines.append("  m choose robot")
+        lines.append("")
+        lines.append("CTRL-C to quit.")
+        lines.append("-------------------------------")
+        lines.append(self.render_current_speeds())
+        return "\n".join(lines)
 
-        print("")
-        print("Robot selection:")
-        print("  m choose robot")
-        print("")
-        print("CTRL-C to quit.")
-        print("-------------------------------")
-        self._print_current_speeds()
+    def render_current_speeds(self) -> str:
+        return f"Linear Speed: {self.linear_speed:.2f}  Angular Speed: {self.angular_speed:.2f}"
 
-    def _print_current_speeds(self):
-        print(f"Linear Speed: {self.linear_speed:.2f}  Angular Speed: {self.angular_speed:.2f}")
+    def render_robot_list(self, robots: List[str]) -> str:
+        lines = []
+        lines.append("")
+        lines.append("======= AVAILABLE ROBOTS =======")
+        if not robots:
+            lines.append("")
+            lines.append("  (none found)")
+            lines.append("")
+            lines.append("  - Try 'r' to refresh")
+            lines.append("")
+            lines.append("  - Make sure each robot is")
+            lines.append("    on the same ROS_DOMAIN_ID")
+            lines.append("    and network.")
+            lines.append("")
+            lines.append("  - Make sure your robots are")
+            lines.append("    currently running at least")
+            lines.append("    one node.")
+            lines.append("")
+        else:
+            lines.append("")
+            for r in robots:
+                lines.append(f"  - {r}")
+                lines.append("")
+        lines.append("================================")
+        lines.append("")
+        return "\n".join(lines)
 
     # ---------------- Discovery helpers ----------------
 
@@ -211,18 +328,11 @@ class RobotLegionTeleop(Node):
         return m.group(1) if m else None
 
     def _discover_candidate_cmd_vel_topics(self) -> List[str]:
-        """
-        Return topics that look like /<robot>/cmd_vel.
-        """
         topics_and_types = self.get_topic_names_and_types()
         topics = [t for (t, _types) in topics_and_types]
         return [t for t in topics if CMD_VEL_RE.match(t)]
 
     def list_available_robots(self) -> List[str]:
-        """
-        Available robots are those with at least one subscriber on /<robot>/cmd_vel.
-        That means the robot's motor driver node is up and listening.
-        """
         robots: Set[str] = set()
         for t in self._discover_candidate_cmd_vel_topics():
             subs = self.get_subscriptions_info_by_topic(t)
@@ -232,35 +342,7 @@ class RobotLegionTeleop(Node):
                     robots.add(robot)
         return sorted(robots)
 
-    def _print_robot_list(self, robots: List[str]):
-        print("")
-        print("======= AVAILABLE ROBOTS =======")
-        if not robots:
-            print("")
-            print("  (none found)")
-            print("")
-            print("  - Try 'r' to refresh")
-            print("")
-            print("  - Make sure each robot  is")
-            print("    on the same ROS_DOMAIN_ID")
-            print("    and network.")
-            print("")
-            print("  - Make sure your robots are ")
-            print("    currently running at least")
-            print("    one node.")
-            print("")
-        else:
-            for r in robots:
-                print("")
-                print(f"  - {r}")
-                print("")
-        print("================================")
-        print("")
-
     def _validate_robot_name(self, name: str) -> Tuple[bool, str]:
-        """
-        Returns (is_valid, cmd_vel_topic).
-        """
         name = name.strip()
         if not name:
             return False, ""
@@ -287,7 +369,7 @@ class RobotLegionTeleop(Node):
             new_topic = "/" + new_topic
 
         if new_topic == "/cmd_vel":
-            print("[ERROR] Refusing to use /cmd_vel. Use /<robot>/cmd_vel for multi-robot architecture.")
+            self._tprint("[ERROR] Refusing to use /cmd_vel. Use /<robot>/cmd_vel for multi-robot architecture.")
             return
 
         robot = self._topic_to_robot(new_topic)
@@ -304,8 +386,8 @@ class RobotLegionTeleop(Node):
         self.cmd_vel_topic = new_topic
 
         self._publish_active_robot()
-        self._print_instructions(new_topic)
-        print(f"[ACTIVE ROBOT] Now controlling: {self.current_robot_name}")
+        self._tprint(self.render_instructions(new_topic))
+        self._tprint(f"[ACTIVE ROBOT] Now controlling: {self.current_robot_name}")
 
     # ---------------- Circle-turn helper ----------------
 
@@ -364,9 +446,9 @@ class RobotLegionTeleop(Node):
             return
 
         # Robot went offline
-        print("")
-        print(f"[OFFLINE] Robot '{self.current_robot_name}' appears offline (no subscribers on {self.cmd_vel_topic}).")
-        print("[OFFLINE] Stopping and returning to robot selection.")
+        self._tprint("")
+        self._tprint(f"[OFFLINE] Robot '{self.current_robot_name}' appears offline (no subscribers on {self.cmd_vel_topic}).")
+        self._tprint("[OFFLINE] Stopping and returning to robot selection.")
         try:
             self.publisher_.publish(Twist())
         except Exception:
@@ -391,64 +473,68 @@ class RobotLegionTeleop(Node):
     def _increase_both_speeds(self):
         self.linear_speed *= self.speed_step
         self.angular_speed *= self.speed_step
-        self._print_current_speeds()
+        self._tprint(self.render_current_speeds())
 
     def _decrease_both_speeds(self):
         self.linear_speed /= self.speed_step
         self.angular_speed /= self.speed_step
-        self._print_current_speeds()
+        self._tprint(self.render_current_speeds())
 
     def _increase_linear_speed(self):
         self.linear_speed *= self.speed_step
-        self._print_current_speeds()
+        self._tprint(self.render_current_speeds())
 
     def _decrease_linear_speed(self):
         self.linear_speed /= self.speed_step
-        self._print_current_speeds()
+        self._tprint(self.render_current_speeds())
 
     def _set_slow_profile(self):
         self.linear_speed = self.base_slow_linear
         self.angular_speed = self.base_slow_angular
-        self._print_current_speeds()
+        self._tprint(self.render_current_speeds())
 
     def _set_medium_profile(self):
         self.linear_speed = self.medium_linear
         self.angular_speed = self.medium_angular
-        self._print_current_speeds()
+        self._tprint(self.render_current_speeds())
 
     def _set_fast_profile(self):
         self.linear_speed = self.fast_linear
         self.angular_speed = self.fast_angular
-        self._print_current_speeds()
+        self._tprint(self.render_current_speeds())
 
     # ---------------- Robot selection prompt ----------------
 
-    def _prompt_until_valid_robot(self, settings):
+    def _prompt_until_valid_robot(self):
         """
         Print robots, prompt until user enters a valid robot name.
         """
         while rclpy.ok():
             robots = self.list_available_robots()
-            self._print_robot_list(robots)
+            self._tprint(self.render_robot_list(robots))
 
-            restore_terminal_settings(settings)
+            # We MUST be in cooked mode for input()
+            restore_terminal_settings(self._terminal_settings)
             try:
-                user_input = input("[SELECT ROBOT] Enter robot name (or 'r' to refresh): ").strip()
+                user_input = input("[SELECT ROBOT] Enter robot name \n(or enter 'r' to refresh): ").strip()
             except Exception:
-                tty.setraw(sys.stdin.fileno())
+                # Return to raw and retry
+                set_raw_mode()
                 continue
-            tty.setraw(sys.stdin.fileno())
+
+            # Back to raw for key reading after input()
+            set_raw_mode()
 
             if user_input.lower() == "r":
                 continue
 
             ok, topic = self._validate_robot_name(user_input)
             if not ok:
-                print(f"[INVALID] '{user_input}' is not an available robot (no subscriber on {topic}). Try again.\n")
+                self._tprint(f"[INVALID] '{user_input}' is not an available robot (no subscriber on {topic}). Try again.\n")
                 continue
 
             if not self.allow_cmd_vel_switching and self.publisher_ is not None:
-                print("[ROBOT SWITCH] Switching disabled (allow_cmd_vel_switching:=False).")
+                self._tprint("[ROBOT SWITCH] Switching disabled (allow_cmd_vel_switching:=False).")
                 return
 
             self._apply_cmd_vel_topic(topic)
@@ -457,14 +543,18 @@ class RobotLegionTeleop(Node):
     # ---------------- Main loop ----------------
 
     def run(self):
-        settings = termios.tcgetattr(sys.stdin)
+        # Save terminal settings once so all printing can temporarily restore them.
+        self._terminal_settings = termios.tcgetattr(sys.stdin)
 
-        # initial selection
-        self._prompt_until_valid_robot(settings)
+        # Enter raw mode for key reading
+        set_raw_mode()
+
+        # initial selection (uses input, which temporarily flips to cooked itself)
+        self._prompt_until_valid_robot()
 
         try:
             while rclpy.ok():
-                key = get_key(settings)
+                key = read_key_raw(timeout_s=0.1)
                 if key == "":
                     continue
                 if key == "\x03":  # Ctrl-C
@@ -473,13 +563,13 @@ class RobotLegionTeleop(Node):
                 # If we currently have no robot selected (offline or startup), force selection
                 if self.publisher_ is None:
                     if key == "m":
-                        self._prompt_until_valid_robot(settings)
+                        self._prompt_until_valid_robot()
                     elif key in self.speed_bindings:
                         self.speed_bindings[key]()
                     elif key in (" ", "5", "s"):
-                        print("[STOP] (no robot selected)")
+                        self._tprint("[STOP] (no robot selected)")
                     else:
-                        print("[INFO] No robot selected. Press 'm' to select a robot.")
+                        self._tprint("[INFO] No robot selected. Press 'm' to select a robot.")
                     continue
 
                 # Movement keys
@@ -518,12 +608,12 @@ class RobotLegionTeleop(Node):
                     self.last_lin_mult = 0.0
                     self.last_ang_mult = 0.0
                     self.last_twist = Twist()
-                    print("[STOP]")
+                    self._tprint("[STOP]")
                     continue
 
                 # Switch robot
                 if key == "m":
-                    self._prompt_until_valid_robot(settings)
+                    self._prompt_until_valid_robot()
                     continue
 
                 # Speed controls
@@ -537,7 +627,7 @@ class RobotLegionTeleop(Node):
                     self.publisher_.publish(Twist())
             except Exception:
                 pass
-            restore_terminal_settings(settings)
+            restore_terminal_settings(self._terminal_settings)
 
 
 def main(args=None):
