@@ -1,3 +1,7 @@
+This is the minimal version of **AEmilioDistefano's ros2_ws repository**.  This version **does not include any virtualization** and **only includes what is necvessary control your robot(s) in the real world**.
+
+When cloning onto a Raspberry Pi, **always clone this repository rather than the full version of the ros2_ws repository**.
+
 # IRL Robot Setup (differential drive) 
 
 By the end of this instructional you will have built **your own differential drive robot**, controllable via WiFi with your keyboard and ready for autonomous functions
@@ -138,8 +142,6 @@ The GPIO pins on the Raspberry Pi will connect to the pins on your L298N Motor C
 
 **ENA** is sometimes labeled as **EN A**, **EA**, **PWM_A**, **PWMA**, **EN1**, or **ENABLE_A**
 
-**ENB** is also sometimes labeled as **ENB**, **EN B**, **EB**, **PWM_B**, **PWMB**, **EN2**, **ENABLE_B**
-
 **IN1** is sometimes labeled as **INA1**, **AIN1**, or **I1**
 
 **IN2** is sometimes labeled as **INA2**, **AIN2**, or **I2**
@@ -148,14 +150,16 @@ The GPIO pins on the Raspberry Pi will connect to the pins on your L298N Motor C
 
 **IN4** is sometimes labeled as **INA4**, **AIN4**, or **I4**
 
+**ENB** is also sometimes labeled as **ENB**, **EN B**, **EB**, **PWM_B**, **PWMB**, **EN2**, **ENABLE_B**
+
 ### Connect the following pins on the motor controller to the folowing pins on the Raspberry Pi:
 
-**ENA** to ****
-**ENB** to ****
-**IN1** to ****
-**IN2** to ****
-**IN3** to ****
-**IN4** to ****
+**ENA** to **GPIO 12** AKA **Pin 32** AKA **PWM0** 
+**IN1** to **GPIO 23** AKA **Pin 16**
+**IN2** to **GPIO 22** AKA **Pin 15**
+**IN3** to **GPIO 27** AKA **Pin 13**
+**IN4** to **GPIO 17** AKA **Pin 11**
+**ENB** to **GPIO 13** AKA **Pin 33** AKA **PWM1**
 
 These connections are depicted below:
 
@@ -173,10 +177,10 @@ The GPIO pins connected to the motor controller will be referenced in our code:
 
 # 3. Connect your motors to your motor controller 
 
-## 4.1 
+## 3.1 
 
 <br>
-Take eight of your male-to-female _or male-to-male) 
+Take eight of your male-to-female (or male-to-male) jumper cables and perform the following connections:
 
 ![host-and-port](media/MC_motors_2.jpg)
 
@@ -289,6 +293,10 @@ source ~/.bashrc
 <br>
 Clone this repository into your Raspberry Pi:
 
+```shell
+git clone https://github.com/AEmilioDiStefano/ros2_ws_minimal.git ros2_ws
+```
+
 <br>
 
 
@@ -355,7 +363,7 @@ You should see **GPIO** and **crw-rw----** included in the output.
 
 **Both will stay opened** while you are controlling your robot
 
-**In one terminal**, SSH into your robot's Raspberry Pi and clone **the minimal version of the ros2_ws workspace** into your Pi:
+**In one terminal**, SSH into your robot's Raspberry Pi and **if yuou don't already have it**, clone **the minimal version of the ros2_ws workspace** into your Pi:
 
 ```shell
 git clone https://github.com/AEmilioDiStefano/ros2_ws_minimal.git ros2_ws
@@ -375,7 +383,7 @@ cd ros2_ws
 
 <br>
 
-**In both terminals**, enter the  run the following command:
+**In both terminals**, enter the following command:
 
 ```shell
 unset ROS_LOCALHOST_ONLY
@@ -384,6 +392,12 @@ source /opt/ros/jazzy/setup.bash
 source ~/ros2_ws/install/setup.bash
 ```
 
+**What this does:** 
+
+   - Ensures that **the ROS2_LOCALHOST_ONLY environment variable is not set** (otherwise all ROS 2 communications are restricted to the local loopback interface)
+   - Puts both the **laptop and the robot on the same ROS2_localhost_domain** (otherwise the machines will not be able to communicate)
+   - Sources **Jazzy's setup.bash** file
+   - Sources **your workspace's setup.bash** from the install directory (this is generated when you **colcon build**)
 <br>
 
 ### 5.3 On your Pi, run the motor controller node with the following command:
