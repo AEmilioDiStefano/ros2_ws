@@ -65,7 +65,7 @@ Now add the code depicted below:
 </include>
 ```
 
-in your SDF world file will load the water_towel model from the /models directory into your world.
+in your SDF world file.  This will place the water_towel model from the /models directory into your world.
 
 <br>
 
@@ -86,6 +86,10 @@ export GZ_SIM_SYSTEM_PLUGIN_PATH="/opt/ros/jazzy/lib:${GZ_SIM_SYSTEM_PLUGIN_PATH
 
 ```shell
 export GZ_SIM_RESOURCE_PATH=$HOME/ros2_ws/src/my_robot_bringup/models:$GZ_SIM_RESOURCE_PATH
+```
+
+```shell
+export ROS_NAMESPACE="/$HOSTNAME"
 ```
 
 # :open_file_folder: :white_check_mark:
