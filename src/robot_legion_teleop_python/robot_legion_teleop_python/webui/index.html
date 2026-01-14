@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Robot Legion FPV</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">Robot Legion FPV</div>
+      <div class="status" id="connStatus">disconnected</div>
+      <input id="nameInput" class="nameInput" placeholder="display name (optional)" />
+      <button id="setNameBtn" class="btn">Set Name</button>
+    </header>
+
+    <main class="layout">
+      <section class="videoPanel">
+        <div class="bigVideo">
+          <div class="bigLabel" id="bigLabel">No robot selected</div>
+          <img id="bigImg" class="bigImg" />
+        </div>
+
+        <div class="tilesHeader">Robots</div>
+        <div id="tiles" class="tiles"></div>
+      </section>
+
+      <section class="controlPanel">
+        <button id="switchBtn" class="btn switchBtn">Switch Robot</button>
+
+        <div class="numpad">
+          <button class="pad" data-cmd="7">↖</button>
+          <button class="pad" data-cmd="8">↑</button>
+          <button class="pad" data-cmd="9">↗</button>
+
+          <button class="pad" data-cmd="4">⟲</button>
+          <button class="pad stop" data-cmd="5">■</button>
+          <button class="pad" data-cmd="6">⟳</button>
+
+          <button class="pad" data-cmd="1">↙</button>
+          <button class="pad" data-cmd="2">↓</button>
+          <button class="pad" data-cmd="3">↘</button>
+        </div>
+
+        <div class="hint">
+          Tip: On touchscreens, tap a robot tile to claim control, then use the pad.<br/>
+          Only one user may control a robot at a time.
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

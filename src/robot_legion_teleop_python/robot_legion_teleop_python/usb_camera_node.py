@@ -9,6 +9,7 @@ Publishes sensor_msgs/Image to:
 """
 
 import rclpy
+import getpass
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
@@ -19,7 +20,7 @@ class UsbCameraNode(Node):
     def __init__(self):
         super().__init__('usb_camera_node')
 
-        self.declare_parameter('robot_name', 'emiliobot')
+        self.declare_parameter('robot_name', getpass.getuser())
         self.declare_parameter('device', 0)
         self.declare_parameter('frame_rate', 30)
         self.declare_parameter('width', 640)
