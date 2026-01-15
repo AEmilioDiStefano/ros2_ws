@@ -1,7 +1,3 @@
-This is the minimal version of **AEmilioDistefano's ros2_ws repository**.  This version **does not include any virtualization** and **only includes what is necvessary control your robot(s) in the real world**.
-
-When cloning onto a Raspberry Pi, **always clone this repository rather than the full version of the ros2_ws repository**.
-
 # ROS2 Differential Drive Robot Setup 
 
 By the end of this instructional you will have built **your own differential drive robot**, controllable via WiFi with your keyboard and ready for autonomous functions
@@ -192,7 +188,7 @@ The GPIO pins connected to the motor controller will be referenced in our code:
 <br>
 <br>
 
-# 4. 
+# 4. Complete the circuit
 
 ![host-and-port](media/circuit_all.jpg)
 
@@ -260,7 +256,11 @@ Now add sourcing to your .bashrc file on the Pi:
 ```shell
 echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
 source ~/.bashrc
+```
 
+```shell
+echo 'export ROS_NAMESPACE="/$HOSTNAME"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 Add some packages for GPIO control, camera and CV bridge, and other tools:
@@ -269,7 +269,6 @@ Add some packages for GPIO control, camera and CV bridge, and other tools:
 sudo apt install -y python3-rpi.gpio python3-opencv \
   ros-jazzy-cv-bridge ros-jazzy-image-transport \
   ros-jazzy-geometry-msgs ros-jazzy-sensor-msgs ros-jazzy-std-msgs
-
 ```
 
 <br>
@@ -346,7 +345,6 @@ EOF
 
 ```shell
 ls -l /dev/gpiomem
-
 ```
 
 You should see **GPIO** and **crw-rw----** included in the output.
@@ -355,21 +353,51 @@ You should see **GPIO** and **crw-rw----** included in the output.
 <br>
 <br>
 
-# Start and control your robot 
+# 6. Install additional dependencies
+
+
+## 6.1 Install ROS-native web gateway packages (on the laptop AND the Pi)
+
+```shell
+sudo apt update
+sudo apt install -y \
+  ros-${ROS_DISTRO}-rosbridge-server \
+  ros-${ROS_DISTRO}-web-video-server
+```
+
+## 6.2 Get roslib locally (on the laptop)
+
+```shell
+sudo apt update
+sudo apt install -y curl
+curl -L -o roslib.min.js https://raw.githubusercontent.com/RobotWebTools/roslibjs/develop/build/roslib.min.js
+```
+
+## 6.3 Install ROS camera dependencies (ONLY ON THE Pi(s))
+
+```shell
+sudo apt install -y ros-jazzy-v4l2-camera
+```
+
+<br>
+<br>
+<br>
+
+# 7. Start and control your robot 
 
 <br>
 
-## 1. Power up your robot
+## 7.1 Power up your robot
 
 **Turn on the power bank** that powers the Raspberry Pi
 
 **Switch on** the 'ON' switch for your motors and motor controller.
 
-** Wait about 120 seconds** for the Pi to get online
+**Wait about 120 seconds** for the Pi to get online
 
 <br>
 
-## 2. Open two different terminals 
+## 7.2 Open two different terminals 
 
 **Both will stay opened** while you are controlling your robot
 
@@ -414,7 +442,7 @@ source ~/ros2_ws/install/setup.bash
    - Sources **your workspace's setup.bash** from the install directory (this is generated when you **colcon build**)
 <br>
 
-## 3. On your Pi, run the motor controller node with the following command:
+## 7.3 On your Pi, run the motor controller node with the following command:
 
 
 ```shell
@@ -425,17 +453,15 @@ ros2 run robot_legion_teleop_python motor_driver_node
 <br>
 <br>
 
-## 4. On your laptop, run the teleop node to control your robot:
+## 7.4 On your laptop, run the teleop node to control your robot:
 
 ```shell
 ros2 run robot_legion_teleop_python legion_teleop_key
 ```
 
 <br>
-<br>
-<br>
 
-## 5. Play hide-and-seek with your cat 
+## 7.5 Play hide-and-seek with your cat 
 
 <br> 
 
