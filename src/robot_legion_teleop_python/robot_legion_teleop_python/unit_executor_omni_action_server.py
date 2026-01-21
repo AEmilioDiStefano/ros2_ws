@@ -10,7 +10,7 @@ Implements:
 Publishes:
   /<robot_name>/cmd_vel            geometry_msgs/Twist
 
-This assumes your omni base controller consumes:
+This assumes the omni base controller consumes:
   linear.x (forward/back), linear.y (left/right strafe), angular.z (yaw)
 Typical for holonomic ROS controllers.
 """
