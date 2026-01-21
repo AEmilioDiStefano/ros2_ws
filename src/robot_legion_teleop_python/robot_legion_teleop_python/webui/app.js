@@ -1,19 +1,91 @@
-let ws = null;
-let clientId = null;
+// Robot Legion FPV UI (ROS-native)
+// - Video: web_video_server on :8080
+// - Control/status: rosbridge_server on :9090 (roslibjs)
+
+let ros = null;
+
+// Avoid leaking MJPEG connections/timers
+let tileTimers = new Map();
+let currentBigSrc = "";
 
 let robots = [];
 let activeRobot = null;      // big screen
 let controlledRobot = null;  // robot we have claimed
 
-function $(id){ return document.getElementById(id); }
-
-function setConnStatus(text){
-  $("connStatus").textContent = text;
+// Stable per-tab client identity
+const CLIENT_ID_KEY = "robot_legion_client_id";
+let clientId = localStorage.getItem(CLIENT_ID_KEY);
+if (!clientId) {
+  clientId = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
+  localStorage.setItem(CLIENT_ID_KEY, clientId);
 }
 
-function wsSend(obj){
-  if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  ws.send(JSON.stringify(obj));
+let displayName = localStorage.getItem("robot_legion_display_name") || "";
+
+let statusSub = null;
+let claimPub = null;
+let releasePub = null;
+let cmdPub = null;
+let heartbeatPub = null;
+
+function $(id){ return document.getElementById(id); }
+
+function rosbridgeUrl(){
+  // If you later host this remotely, you can change this to wss://yourdomain/ws etc.
+  const host = location.hostname;
+  return `ws://${host}:9090`;
+}
+
+function setConnStatus(text){
+  const el = $("connStatus");
+  if (el) el.textContent = text;
+}
+
+function setActiveRobotText(){
+  const el = $("activeRobotText");
+  if (!el) return;
+  el.textContent = activeRobot ? activeRobot : "none";
+}
+
+function streamUrlForRobot(robot){
+  // IMPORTANT: web_video_server expects literal slashes in the topic query param.
+  // encodeURIComponent() breaks this by turning "/" into "%2F", which web_video_server rejects.
+  const topic = `/${robot}/camera/image_raw`;
+  const safeTopic = encodeURI(topic); // preserves "/"
+  return `http://${location.hostname}:8080/stream?topic=${safeTopic}`;
+}
+
+function snapshotUrlForRobot(robot){
+  // For thumbnails: use snapshot endpoint (cheap) and cache-bust so the browser refreshes.
+  const topic = `/${robot}/camera/image_raw`;
+  const safeTopic = encodeURI(topic);
+  return `http://${location.hostname}:8080/snapshot?topic=${safeTopic}&_=${Date.now()}`;
+}
+
+function updateBigVideo(){
+  const bigImg = $("bigImg");
+  const bigLabel = $("bigLabel");
+  if (!bigImg || !bigLabel) return;
+
+  if (!activeRobot){
+    // Close any existing MJPEG connection.
+    if (bigImg.getAttribute("src")) bigImg.setAttribute("src", "");
+    bigImg.removeAttribute("src");
+    currentBigSrc = "";
+    bigLabel.textContent = "No robot selected";
+    return;
+  }
+
+  const you = (controlledRobot === activeRobot) ? " (YOU CONTROL)" : "";
+  bigLabel.textContent = `Active video: ${activeRobot}${you}`;
+
+  const desired = streamUrlForRobot(activeRobot);
+  if (desired !== currentBigSrc){
+    // Close the previous MJPEG connection before opening a new one.
+    bigImg.setAttribute("src", "");
+    bigImg.src = desired;
+    currentBigSrc = desired;
+  }
 }
 
 function buildTile(robotInfo){
@@ -22,7 +94,8 @@ function buildTile(robotInfo){
   tile.dataset.robot = robotInfo.robot;
 
   const img = document.createElement("img");
-  img.src = `/stream/${robotInfo.robot}?t=${Date.now()}`; // cache-buster
+  // Use snapshots for tiles to avoid overloading web_video_server with multiple MJPEG streams.
+  img.src = snapshotUrlForRobot(robotInfo.robot);
   img.loading = "lazy";
 
   const meta = document.createElement("div");
@@ -36,24 +109,20 @@ function buildTile(robotInfo){
   rn.textContent = robotInfo.robot;
 
   const badge = document.createElement("div");
-  badge.className = "badge " + (robotInfo.locked ? "locked" : "free");
-  badge.textContent = robotInfo.locked ? "CONTROLLED" : "IDLE";
+  const locked = !!robotInfo.claimed_by;
+  badge.className = "badge " + (locked ? "locked" : "free");
+  badge.textContent = locked ? "CONTROLLED" : "IDLE";
 
   nameRow.appendChild(rn);
   nameRow.appendChild(badge);
 
   const sub = document.createElement("div");
   sub.className = "sub";
-
-  if (!robotInfo.has_video && !robotInfo.has_control){
-    sub.textContent = "no video, no control";
-  } else if (!robotInfo.has_video){
-    sub.textContent = "no video";
-  } else if (!robotInfo.has_control){
-    sub.textContent = "video only";
-  } else {
-    sub.textContent = robotInfo.locked ? `by ${robotInfo.controller}` : "tap/click to control";
-  }
+  if (!robotInfo.has_video && !robotInfo.controllable) sub.textContent = "no video, no control";
+  else if (!robotInfo.has_video) sub.textContent = "no video";
+  else if (!robotInfo.controllable) sub.textContent = "video only";
+  else if (locked) sub.textContent = `by ${robotInfo.claimed_by.display_name || "someone"}`;
+  else sub.textContent = "tap/click to control";
 
   meta.appendChild(nameRow);
   meta.appendChild(sub);
@@ -61,21 +130,26 @@ function buildTile(robotInfo){
   tile.appendChild(img);
   tile.appendChild(meta);
 
-  // Styling
-  if (robotInfo.locked) tile.classList.add("locked");
-  if (robotInfo.robot === activeRobot) tile.classList.add("active");
+  // Refresh thumbnail snapshots at a low rate (keeps UI responsive and avoids MJPEG overload).
+  // 1 Hz is a good starting point over Wi-Fi; increase to 2–3 Hz if you have headroom.
+  const timer = setInterval(() => {
+    // Only refresh if the tile is still attached (defensive)
+    if (!tile.isConnected) return;
+    img.src = snapshotUrlForRobot(robotInfo.robot);
+  }, 1000);
+  tileTimers.set(robotInfo.robot, timer);
 
-  // Touch/click to claim & focus
+  if (robotInfo.robot === activeRobot) tile.classList.add("active");
+  if (locked && robotInfo.claimed_by.client_id !== clientId) tile.classList.add("locked");
+
   tile.addEventListener("click", () => {
     activeRobot = robotInfo.robot;
+    setActiveRobotText();
     updateBigVideo();
 
-    // Claim only if not locked by someone else
-    if (robotInfo.locked && robotInfo.controller && controlledRobot !== robotInfo.robot){
-      // Can't steal control
-      return;
-    }
-    wsSend({type:"claim", robot: robotInfo.robot});
+    // Don't allow stealing control
+    if (locked && robotInfo.claimed_by.client_id !== clientId) return;
+    claimRobot(robotInfo.robot);
   });
 
   return tile;
@@ -83,158 +157,185 @@ function buildTile(robotInfo){
 
 function renderTiles(){
   const tiles = $("tiles");
+  if (!tiles) return;
+
+  // Clear any existing thumbnail refresh timers to avoid leaks.
+  for (const [, timer] of tileTimers.entries()){
+    clearInterval(timer);
+  }
+  tileTimers.clear();
+
   tiles.innerHTML = "";
   for (const r of robots){
     tiles.appendChild(buildTile(r));
   }
 }
 
-function updateBigVideo(){
-  const bigImg = $("bigImg");
-  const bigLabel = $("bigLabel");
-
-  if (!activeRobot){
-    bigImg.removeAttribute("src");
-    bigLabel.textContent = "No robot selected";
-    return;
-  }
-  bigLabel.textContent = `Active video: ${activeRobot}` + (controlledRobot === activeRobot ? " (YOU CONTROL)" : "");
-  bigImg.src = `/stream/${activeRobot}?t=${Date.now()}`;
-}
-
 function applyStatus(payload){
   robots = payload.robots || [];
+
+  // If we haven't picked a robot yet, prefer "mine" (if claimed), else first with video
   if (!activeRobot){
-    activeRobot = payload.suggested_active || null;
+    const mine = robots.find(r => r.claimed_by && r.claimed_by.client_id === clientId);
+    if (mine) activeRobot = mine.robot;
+    if (!activeRobot){
+      const firstVid = robots.find(r => r.has_video);
+      activeRobot = firstVid ? firstVid.robot : null;
+    }
   }
+
+  // Keep controlledRobot aligned with reality
+  const mineNow = robots.find(r => r.claimed_by && r.claimed_by.client_id === clientId);
+  controlledRobot = mineNow ? mineNow.robot : null;
+
+  // If activeRobot disappears, pick another
+  if (activeRobot && !robots.find(r => r.robot === activeRobot)){
+    const firstVid = robots.find(r => r.has_video);
+    activeRobot = firstVid ? firstVid.robot : null;
+  }
+
+  setActiveRobotText();
   renderTiles();
   updateBigVideo();
 }
 
-function hookNumpad(){
-  const pads = document.querySelectorAll(".pad");
-  for (const b of pads){
-    const code = b.dataset.cmd;
-    const sendStop = () => sendCmd(0, 0);
+function publish(topicObj, msg){
+  try { topicObj.publish(new ROSLIB.Message(msg)); }
+  catch(e){ console.warn("publish failed:", e); }
+}
 
-    const down = (ev) => {
-      ev.preventDefault();
-      if (!controlledRobot) return;
-      const [lin, ang] = keyToTwist(code);
-      sendCmd(lin, ang);
-    };
-    const up = (ev) => {
-      ev.preventDefault();
-      if (!controlledRobot) return;
-      sendStop();
-    };
-
-    // pointer events cover mouse + touch
-    b.addEventListener("pointerdown", down);
-    b.addEventListener("pointerup", up);
-    b.addEventListener("pointercancel", up);
-    b.addEventListener("pointerleave", up);
-  }
-
-  $("switchBtn").addEventListener("click", () => {
-    // Just prompt user with a simple selection list
-    const free = robots.filter(r => !r.locked || r.robot === controlledRobot).map(r => r.robot);
-    const choice = window.prompt("Enter robot name to control:\n\n" + free.join("\n"));
-    if (!choice) return;
-    activeRobot = choice.trim();
-    updateBigVideo();
-    wsSend({type:"claim", robot: activeRobot});
+function claimRobot(robot){
+  if (!claimPub) return;
+  publish(claimPub, {
+    client_id: clientId,
+    display_name: displayName,
+    robot: robot
   });
 }
 
-function keyToTwist(code){
-  // Numpad mapping requested:
-  // 7 circle left fwd, 8 fwd, 9 circle right fwd
-  // 4 rotate left, 5 stop, 6 rotate right
-  // 1 circle left back, 2 back, 3 circle right back
-  //
-  // We'll express as Twist (lin, ang) and let motor_driver_node do diff-drive.
-  // Circle = reduced angular + linear mix.
-  const L = 0.45; // lin magnitude (server clamps anyway)
-  const A = 1.2;  // ang magnitude (server clamps anyway)
+function releaseRobot(robot){
+  if (!releasePub) return;
+  publish(releasePub, {
+    client_id: clientId,
+    robot: robot
+  });
+}
 
-  switch(code){
-    case "8": return [ +L, 0 ];
-    case "2": return [ -L, 0 ];
-    case "4": return [ 0, +A ];
-    case "6": return [ 0, -A ];
-    case "5": return [ 0, 0 ];
+function sendCmd(linear, angular){
+  if (!cmdPub) return;
+  if (!controlledRobot) return;
 
-    case "7": return [ +L, +A*0.7 ];
-    case "9": return [ +L, -A*0.7 ];
-    case "1": return [ -L, +A*0.7 ];
-    case "3": return [ -L, -A*0.7 ];
-    default: return [0,0];
+  publish(cmdPub, {
+    client_id: clientId,
+    robot: controlledRobot,
+    linear: linear,
+    angular: angular
+  });
+}
+
+function startHeartbeatLoop(){
+  // Keep-alive / presence for arbiter (helps it release control if browser disappears)
+  setInterval(() => {
+    if (!heartbeatPub) return;
+    publish(heartbeatPub, {
+      client_id: clientId,
+      display_name: displayName
+    });
+  }, 1000);
+}
+
+function hookNumpad(){
+  const bind = (id, lin, ang) => {
+    const el = $(id);
+    if (!el) return;
+    const press = (e) => { e.preventDefault(); sendCmd(lin, ang); };
+    el.addEventListener("mousedown", press);
+    el.addEventListener("touchstart", press, { passive: false });
+  };
+
+  // Numpad-ish layout:
+  // 7 8 9 -> fwd-left, fwd, fwd-right
+  // 4 5 6 -> rot-left, stop, rot-right
+  // 1 2 3 -> back-left, back, back-right
+  bind("btn7",  0.4,  0.8);
+  bind("btn8",  0.6,  0.0);
+  bind("btn9",  0.4, -0.8);
+
+  bind("btn4",  0.0,  1.0);
+  bind("btn5",  0.0,  0.0);
+  bind("btn6",  0.0, -1.0);
+
+  bind("btn1", -0.4,  0.8);
+  bind("btn2", -0.6,  0.0);
+  bind("btn3", -0.4, -0.8);
+
+  const switchBtn = $("btnSwitch");
+  if (switchBtn){
+    switchBtn.addEventListener("click", () => {
+      // Only switch selection (claim happens on tile click)
+      activeRobot = null;
+      updateBigVideo();
+      setActiveRobotText();
+    });
   }
 }
 
-function sendCmd(lin, ang){
-  if (!controlledRobot) return;
-  wsSend({type:"cmd", robot: controlledRobot, lin, ang});
+function hookNameSetter(){
+  const input = $("displayName");
+  const setBtn = $("setNameBtn");
+  if (input) input.value = displayName;
+
+  if (!setBtn || !input) return;
+
+  setBtn.addEventListener("click", () => {
+    const dn = input.value.trim();
+    displayName = dn ? dn.slice(0, 40) : "";
+    localStorage.setItem("robot_legion_display_name", displayName);
+  });
 }
 
-function startHeartbeat(){
-  setInterval(() => {
-    if (!controlledRobot) return;
-    wsSend({type:"heartbeat", robot: controlledRobot});
-  }, 700);
-}
+function connectRosbridge(){
+  setConnStatus("connecting...");
+  ros = new ROSLIB.Ros({ url: rosbridgeUrl() });
 
-function connectWS(){
-  const proto = (location.protocol === "https:") ? "wss" : "ws";
-  ws = new WebSocket(`${proto}://${location.host}/ws`);
-
-  ws.onopen = () => {
+  ros.on("connection", () => {
     setConnStatus("connected");
-  };
 
-  ws.onclose = () => {
-    setConnStatus("disconnected");
-    clientId = null;
-    controlledRobot = null;
-    setTimeout(connectWS, 1000);
-  };
+    claimPub = new ROSLIB.Topic({ ros, name: "/fpv/claim_req", messageType: "robot_legion_teleop_python/msg/FpvClaimReq" });
+    releasePub = new ROSLIB.Topic({ ros, name: "/fpv/release_req", messageType: "robot_legion_teleop_python/msg/FpvReleaseReq" });
+    cmdPub = new ROSLIB.Topic({ ros, name: "/fpv/cmd_req", messageType: "robot_legion_teleop_python/msg/FpvCmdReq" });
+    heartbeatPub = new ROSLIB.Topic({ ros, name: "/fpv/heartbeat", messageType: "robot_legion_teleop_python/msg/FpvHeartbeat" });
 
-  ws.onmessage = (evt) => {
-    let msg = null;
-    try { msg = JSON.parse(evt.data); } catch { return; }
+    statusSub = new ROSLIB.Topic({ ros, name: "/fpv/status", messageType: "std_msgs/msg/String" });
 
-    if (msg.type === "hello"){
-      clientId = msg.client_id;
-      return;
-    }
-
-    if (msg.type === "status"){
-      applyStatus(msg.data || {});
-      return;
-    }
-
-    if (msg.type === "claim_result"){
-      if (msg.ok){
-        controlledRobot = msg.robot;
-        activeRobot = msg.robot;
-        updateBigVideo();
-      } else {
-        // failed claim - keep UI but no control
+    statusSub.subscribe((msg) => {
+      try {
+        const payload = JSON.parse(msg.data);
+        if (payload && payload.type === "status") applyStatus(payload);
+      } catch(e){
+        console.warn("bad status payload:", e);
       }
-      return;
-    }
-  };
+    });
+  });
+
+  ros.on("error", (e) => {
+    console.warn("rosbridge error:", e);
+    setConnStatus("error");
+  });
+
+  ros.on("close", () => {
+    setConnStatus("disconnected");
+  });
 }
 
 function boot(){
   hookNumpad();
-  connectWS();
-  startHeartbeat();
+  hookNameSetter();
+  connectRosbridge();
+  startHeartbeatLoop();
 
-  $("setNameBtn").addEventListener("click", () => {
-    const dn = $("nameInput").value.trim();
-    if (dn) wsSend({type:"set_name", display_name: dn});
+  window.addEventListener("beforeunload", () => {
+    if (controlledRobot) releaseRobot(controlledRobot);
   });
 }
 

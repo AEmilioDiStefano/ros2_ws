@@ -1,49 +1,34 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 package_name = "robot_legion_teleop_python"
 
 setup(
     name=package_name,
     version="0.1.0",
-    packages=[package_name],
+    packages=find_packages(exclude=["test"]),
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
-
-        # Web UI assets
-        ("share/" + package_name + "/webui", [
-            "robot_legion_teleop_python/webui/index.html",
-            "robot_legion_teleop_python/webui/app.js",
-            "robot_legion_teleop_python/webui/styles.css",
-        ]),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="Vitruvian Systems LLC",
-    maintainer_email="emilio@vitruvian.systems",
-    description="Keyboard teleop, motor driver, camera node, and FPV mux for Robot Legion robots.",
-    license="CC-BY-NC-4.0",
+    maintainer="Vitruvian Systems",
+    maintainer_email="",
+    description="Robot legion teleop + FPV + stand-in autonomy executors.",
+    license="LicenseRef-Proprietary",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            # Teleop (keyboard)
-            "legion_teleop_key = robot_legion_teleop_python.teleop_legion_key:main",
-
-            # Real robot motor driver (L298N + yellow motors)
+            # Existing nodes you have in the package tree
+            "teleop_legion_key = robot_legion_teleop_python.teleop_legion_key:main",
             "motor_driver_node = robot_legion_teleop_python.motor_driver_node:main",
-
-            # Camera nodes
-            "legion_camera_node = robot_legion_teleop_python.legion_camera_node:main",
             "usb_camera_node = robot_legion_teleop_python.usb_camera_node:main",
-
-            # Optional mux (teleop-selected active robot -> /fpv_camera/image_raw)
+            "fpv_control_arbiter = robot_legion_teleop_python.fpv_control_arbiter:main",
             "fpv_camera_mux = robot_legion_teleop_python.fpv_camera_mux:main",
 
-            # ROS-native browser control arbiter (used with rosbridge + web_video_server)
-            "fpv_control_arbiter = robot_legion_teleop_python.fpv_control_arbiter:main",
-
-            # Gazebo reset utility
-            "reset_gz = robot_legion_teleop_python.reset_gz:main",
+            # New “stand-in autonomy” action servers
+            "unit_executor_diffdrive = robot_legion_teleop_python.unit_executor_diffdrive_action_server:main",
+            "unit_executor_omni = robot_legion_teleop_python.unit_executor_omni_action_server:main",
         ],
     },
 )
