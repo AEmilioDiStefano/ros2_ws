@@ -11,9 +11,7 @@ Publishes:
   /<robot_name>/cmd_vel            geometry_msgs/Twist
 
 This is a demo "autonomy stand-in":
-- It does not plan around obstacles.
-- It does not do localization.
-- It just executes a small playbook safely and reports feedback.
+- No planning, no localization. Just timed Twist behaviors + feedback.
 """
 
 import json
@@ -32,13 +30,20 @@ class DiffDriveUnitExecutor(Node):
     def __init__(self):
         super().__init__("unit_executor_diffdrive")
 
+        # Must match motor_driver_node.py conventions (robot name drives topic names)
         self.declare_parameter("robot_name", getpass.getuser())
-        self.declare_parameter("default_transit_speed_mps", 0.20)
-        self.declare_parameter("default_rotate_speed_rps", 0.80)
+
+        # Match your motor_driver_node defaults for "strong" motion
+        self.declare_parameter("default_transit_speed_mps", 0.40)
+        self.declare_parameter("default_rotate_speed_rps", 2.00)
+
+        # For circle-turn (one track ~0, other ~0.36 when wheel_separation=0.18 and w=2.0)
+        self.declare_parameter("default_turn_linear_mps", 0.18)
 
         self.robot = str(self.get_parameter("robot_name").value).strip() or getpass.getuser()
         self.v = float(self.get_parameter("default_transit_speed_mps").value)
         self.w = float(self.get_parameter("default_rotate_speed_rps").value)
+        self.turn_v = float(self.get_parameter("default_turn_linear_mps").value)
 
         self.cmd_vel_topic = f"/{self.robot}/cmd_vel"
         self.cmd_pub = self.create_publisher(Twist, self.cmd_vel_topic, 10)
@@ -57,16 +62,14 @@ class DiffDriveUnitExecutor(Node):
         self.get_logger().info(f"[{self.robot}] Publishing cmd_vel on {self.cmd_vel_topic}")
 
     def goal_cb(self, goal_request):
-        # Accept only commands we understand (translation barrier)
         cid = (goal_request.command_id or "").strip()
-        allowed = {"transit", "rotate", "hold"}
+        allowed = {"transit", "rotate", "turn", "hold"}
         if cid not in allowed:
             self.get_logger().warn(f"Rejecting unknown command_id: {cid}")
             return GoalResponse.REJECT
         return GoalResponse.ACCEPT
 
     def cancel_cb(self, goal_handle):
-        # This demo executor doesn't support preemption cleanly yet; accept cancel to stop
         return CancelResponse.ACCEPT
 
     def _publish(self, twist: Twist):
@@ -81,19 +84,32 @@ class DiffDriveUnitExecutor(Node):
             feedback.status_text = str(text)
             goal_handle.publish_feedback(feedback)
 
-        params = {}
         try:
             params = json.loads(goal.parameters_json or "{}")
+            if not isinstance(params, dict):
+                params = {}
         except Exception:
             params = {}
 
         command_id = (goal.command_id or "").strip()
 
-        # Simple demo mapping:
-        # transit: direction + duration
-        # rotate: direction + duration
-        # hold: duration
-        duration_s = float(params.get("duration_s", 2.0))
+        duration_s = float(params.get("duration_s", 1.0))
+        speed = params.get("speed", None)
+
+        # Optional speed override for transit/rotate/turn
+        v = self.v
+        w = self.w
+        turn_v = self.turn_v
+        try:
+            if speed is not None:
+                s = float(speed)
+                # Interpret s as a multiplier in (0..1.5] for safety.
+                s = max(0.0, min(1.5, s))
+                v = self.v * s
+                w = self.w * s
+                turn_v = self.turn_v * s
+        except Exception:
+            pass
 
         if command_id == "hold":
             twist = Twist()
@@ -101,35 +117,34 @@ class DiffDriveUnitExecutor(Node):
             run_timed_twist(self._publish, fb, plan, rate_hz=10.0, stop_at_end=True)
 
         elif command_id == "rotate":
+            # Teleop 4/6 semantics: in-place spin -> motor driver tank-spin override
             direction = str(params.get("direction", "left")).lower()
             twist = Twist()
-            twist.angular.z = self.w if direction in ("left", "ccw") else -self.w
+            twist.linear.x = 0.0
+            twist.angular.z = w if direction in ("left", "ccw") else -w
             plan = TimedTwistPlan(twist=twist, duration_s=duration_s, status_text=f"rotating {direction}")
             run_timed_twist(self._publish, fb, plan, rate_hz=20.0, stop_at_end=True)
 
+        elif command_id == "turn":
+            # Circle turn: one track ~0, the other moving (via v + w combination)
+            # With motor_driver_node wheel_separation=0.18 and w≈2.0:
+            #   v=0.18, w=2.0 -> left~0, right~0.36 (left turn)
+            direction = str(params.get("direction", "left")).lower()
+            twist = Twist()
+            twist.linear.x = turn_v
+            twist.angular.z = w if direction in ("left", "ccw") else -w
+            plan = TimedTwistPlan(twist=twist, duration_s=duration_s, status_text=f"turning {direction}")
+            run_timed_twist(self._publish, fb, plan, rate_hz=20.0, stop_at_end=True)
+
         elif command_id == "transit":
+            # Teleop 8/2 semantics: forward/back strong
             direction = str(params.get("direction", "forward")).lower()
             twist = Twist()
-            # Diff-drive: forward/back = linear.x; left/right handled as rotate for demo
-            if direction in ("forward", "ahead", "+x"):
-                twist.linear.x = +self.v
-            elif direction in ("backward", "back", "-x"):
-                twist.linear.x = -self.v
-            elif direction in ("left", "-y", "+y", "right"):
-                # Keep demo honest: diff-drive cannot translate sideways.
-                # Interpret as rotate+transit (still "autonomy stand-in" behavior).
-                # left => rotate left then forward; right => rotate right then forward
-                rotate_dir = "left" if direction == "left" else "right"
-                tw_rot = Twist()
-                tw_rot.angular.z = self.w if rotate_dir == "left" else -self.w
-                run_timed_twist(self._publish, fb,
-                                TimedTwistPlan(twist=tw_rot, duration_s=1.0, status_text=f"turning {rotate_dir}"),
-                                rate_hz=20.0)
-                twist = Twist()
-                twist.linear.x = +self.v
+            if direction in ("backward", "back", "-x"):
+                twist.linear.x = -v
             else:
-                twist.linear.x = +self.v
-
+                twist.linear.x = +v
+            twist.angular.z = 0.0
             plan = TimedTwistPlan(twist=twist, duration_s=duration_s, status_text=f"transit {direction}")
             run_timed_twist(self._publish, fb, plan, rate_hz=20.0, stop_at_end=True)
 
