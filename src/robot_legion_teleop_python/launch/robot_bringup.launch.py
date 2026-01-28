@@ -3,7 +3,7 @@
 """
 robot_bringup.launch.py
 
-Goal:
+Purpose:
   Start ALL ROS 2 nodes that should run ON A PHYSICAL ROBOT to make it drivable
   by the fleet teleop / orchestrator system.
 
@@ -23,13 +23,15 @@ What this launch file starts (on the robot):
   4) usb_camera_node (optional)
      - If you want FPV from this robot. This is kept optional because not every robot
        needs a camera, and camera drivers can differ.
+       
+       ^^ FIXME ^^: FIND A WAY TO MAKE CAMERA USAGE "CAMERA-DRIVER-AGNOSTIC"
 
 Key idea for easy deployment:
   - Each robot has its *own local copy* of config/robot_profiles.yaml.
   - On that robot you set ONE line: top-level `drive_profile: <profile_name>`
     and everything else self-configures.
 
-How to add future nodes:
+HOW TO ADD NODES:
   - Add another Node(...) block below (search for "ADD FUTURE NODES HERE").
   - If it needs parameters, extend the shared `common_params` list/dict.
   - If it needs remaps, add remappings=[(...), (...)] to that Node.
