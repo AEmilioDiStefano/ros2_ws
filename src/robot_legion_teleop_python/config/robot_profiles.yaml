@@ -1,108 +1,82 @@
-# SPDX-License-Identifier: LicenseRef-Proprietary
-#
 # robot_profiles.yaml
-# ------------------
-# This is the ONLY file you must edit when deploying to a new robot drive type.
+# Proprietary - Vitruvian Systems LLC
 #
-# ✅ How the system decides "diff-drive vs mecanum":
-#   - Each robot reads THIS file locally (on that robot) and uses `drive_profile`
-#     to select a profile from the `profiles:` section.
-#   - The robot's heartbeat_node publishes its selected profile + drive_type on
-#     /<robot_name>/heartbeat so the teleop can learn it automatically.
+# PURPOSE
+# -------
+# This YAML defines:
+#   1) Which drive_profile THIS robot uses (robot-local setting)
+#   2) The available profiles (diff, mecanum, etc.) and their parameters
 #
-# ✅ EASIEST DEPLOYMENT WORKFLOW (recommended):
-#   1) Clone workspace on the robot
-#   2) Open THIS file and set `drive_profile:` to the robot's drive type
-#   3) Build + run motor_driver_node + heartbeat_node (and unit_executor if used)
+# HOW THIS ENABLES A HETEROGENEOUS FLEET
+# -------------------------------------
+# Each robot chooses exactly ONE profile locally via 'drive_profile'.
+# Teleop + motor_driver_node + heartbeat_node all read from this.
 #
-# Available profiles (choose ONE):
-#   - diff_hbridge     (2-motor differential drive via classic 2-channel H-bridge)
-#   - mecanum_tb6612   (4-motor mecanum/omni via two TB6612FNG boards)
+# That means you can clone the same repository onto any robot and only change
+# ONE line (drive_profile) to match the robot's hardware + drive type.
 #
-# NOTE:
-# - Teleop laptop can leave this at the default (diff_hbridge) because teleop
-#   will prefer the robot's heartbeat "self-identification" when available.
+# IMPORTANT
+# ---------
+# drive_profile is robot-local and should default to a safe option (diff drive)
+# so a fresh clone doesn't unexpectedly strafe/rotate.
 
-# --------------------------------------------
-# ⭐ SELECTED DRIVE PROFILE (per-robot setting)
-# --------------------------------------------
-# Change this value ON EACH ROBOT to match its physical drive type.
+# --------------------------------------------------------------------
+# ROBOT-LOCAL SELECTION (CHANGE THIS ON EACH ROBOT)
+# --------------------------------------------------------------------
+# Available profiles:
+#   - diff_hbridge
+#   - mecanum_tb6612
+#
+# Set this to the profile you want for THIS robot.
 drive_profile: diff_hbridge
 
-# --------------------------------------------
-# Defaults used only if drive_profile is absent
-# --------------------------------------------
-defaults:
-  profile: diff_hbridge
-
 profiles:
-  # -------------------------------
-  # Differential drive (2-channel H-bridge like your current setup)
-  # -------------------------------
   diff_hbridge:
     drive_type: diff_drive
     hardware: hbridge_2ch
-    cmd_vel_topic_template: "/{robot}/cmd_vel"
     params:
-      wheel_separation: 0.18
+      # Max speeds are used by motor_driver_node.py to normalize Twist commands.
+      # Increase slowly while testing.
       max_linear_speed: 0.40
-      max_angular_speed: 2.00
-      max_pwm: 100
-    gpio:
-      # BCM numbering (matches your current motor_driver_node defaults)
-      en_a: 12
-      in1: 17
-      in2: 27
-      in3: 22
-      in4: 23
-      en_b: 13
+      max_angular_speed: 1.00
 
-  # -------------------------------
-  # Omnidirectional (mecanum) using TWO TB6612FNG boards (4 motors total)
-  # -------------------------------
+      # Optional inversion if one side is mirrored.
+      invert_left: 1
+      invert_right: 1
+
+      # GPIO mapping example (update to your robot wiring)
+      # (Your existing code already uses these pins.)
+      gpio:
+        left_dir: 23
+        left_pwm: 18
+        right_dir: 24
+        right_pwm: 19
+
   mecanum_tb6612:
     drive_type: mecanum
     hardware: tb6612_4ch
-    cmd_vel_topic_template: "/{robot}/cmd_vel"
     params:
-      # These are "command-space" limits used to clamp Twist.
-      # For a 2S pack (8.4V max), you may want max_pwm < 100 to protect TT motors.
       max_linear_speed: 0.50
-      max_lateral_speed: 0.50
-      max_angular_speed: 2.00
-      max_pwm: 80
+      max_angular_speed: 1.20
 
-      # Mixing constant for omega contribution in mecanum mix:
-      # wheel_i = vx +/- vy +/- (k_omega * omega)
-      # Start with 0.22 and tune later if rotation is too aggressive or too weak.
+      # k_omega tunes how much angular.z contributes to wheel outputs.
+      # If rotation is too weak but DOES NOT strain, you can raise this
+      # (try 0.35, 0.50, 0.70, etc.).
       k_omega: 0.22
 
-    gpio:
-      # Optional standby/enable pin. If you hard-wire STBY->VCC on both boards,
-      # set stby_pin to -1. If you wire STBY to a Pi GPIO, set it here.
-      stby_pin: -1
+      # Optional per-wheel inversion (fixes 'rotation strains / fights' issues).
+      # Use 1 for normal, -1 to flip that wheel's direction.
+      # Keys: fl, fr, rl, rr
+      # Example (common): {fl: 1, fr: -1, rl: 1, rr: -1}
+      wheel_invert: {fl: 1, fr: 1, rl: 1, rr: 1}
 
-      # Front-Left wheel
-      fl_pwm: 12
-      fl_in1: 5
-      fl_in2: 6
-
-      # Front-Right wheel
-      fr_pwm: 13
-      fr_in1: 16
-      fr_in2: 19
-
-      # Rear-Left wheel
-      rl_pwm: 18
-      rl_in1: 20
-      rl_in2: 21
-
-      # Rear-Right wheel
-      rr_pwm: 26
-      rr_in1: 23
-      rr_in2: 24
-
-# Optional mapping: map discovered robot names -> profile.
-# If you want "central mapping" on the teleop laptop you can use this,
-# but it is NOT required when using heartbeat self-identification.
-robots: {}  # optional central mapping (leave empty when using heartbeat)
+      # GPIO mapping example (update to your robot wiring)
+      gpio:
+        fl_dir: 5
+        fl_pwm: 12
+        fr_dir: 6
+        fr_pwm: 13
+        rl_dir: 16
+        rl_pwm: 18
+        rr_dir: 20
+        rr_pwm: 19
