@@ -1,208 +1,168 @@
-# motor_driver_node.py
-# Proprietary - Vitruvian Systems LLC
-#
-# PURPOSE
-# -------
-# A universal motor driver node that can support multiple drive types
-# (diff_drive, mecanum, and future profiles) using the SAME ROS interface:
-#
-#   Subscribes: /<robot_name>/cmd_vel   (geometry_msgs/Twist)
-#   Publishes:  (optional status logs)
-#
-# It reads a selected "drive_profile" from robot_profiles.yaml on the robot,
-# and uses that profile to:
-#   - determine drive type (diff vs mecanum)
-#   - determine hardware type (h-bridge, tb6612, etc.)
-#   - load GPIO pins and tuning parameters
-
-from __future__ import annotations
-
-import math
+#!/usr/bin/env python3
 import time
-from typing import Dict, Any, Optional
+import getpass
 
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 
-from robot_legion_teleop_python.drive_profiles import DriveProfileRegistry
-
-
-def clamp(x: float, lo: float, hi: float) -> float:
-    return max(lo, min(hi, x))
+try:
+    import RPi.GPIO as GPIO
+    GPIO_AVAILABLE = True
+except ImportError:
+    GPIO_AVAILABLE = False
 
 
 class MotorDriverNode(Node):
-    """
-    Universal motor driver node.
-
-    NOTE TO ROS2-BEGINNERS:
-    -----------------------
-    This node subscribes to Twist messages and converts them to motor outputs.
-
-    Twist convention:
-      - linear.x  forward/back  (m/s)
-      - linear.y  left/right     (m/s)  (often unused on diff-drive)
-      - angular.z yaw rotation   (rad/s)
-    """
-
     def __init__(self):
         super().__init__("motor_driver_node")
 
-        self.registry = DriveProfileRegistry()
+        # Robot naming
+        self.declare_parameter("robot_name", getpass.getuser())
+        self.robot_name = self.get_parameter("robot_name").value.strip() or getpass.getuser()
 
-        # Determine robot_name from ROS namespace:
-        # If node is started in namespace "/robot3", then this becomes "robot3"
-        ns = self.get_namespace().strip("/")
-        self.robot_name = ns if ns else "robot"
+        # Parameters
+        self.declare_parameter("wheel_separation", 0.18)   # meters
+        self.declare_parameter("max_linear_speed", 0.4)    # m/s
+        self.declare_parameter("max_angular_speed", 2.0)   # rad/s
+        self.declare_parameter("max_pwm", 100)             # percent
 
-        # Load the selected profile from the robot-local YAML file
-        self.profile = self.registry.selected_profile()
-        self.drive_type = self.registry.selected_drive_type()
-        self.hardware = self.registry.selected_hardware()
-        self.profile_params: Dict[str, Any] = self.registry.selected_params()
+        # Topic this robot listens to
+        self.declare_parameter("cmd_vel_topic", f"/{self.robot_name}/cmd_vel")
+        self.cmd_vel_topic = self.get_parameter("cmd_vel_topic").value.strip() or f"/{self.robot_name}/cmd_vel"
 
-        self.get_logger().info(
-            f"[{self.robot_name}] motor_driver_node profile={self.profile} "
-            f"drive_type={self.drive_type} hardware={self.hardware}"
+        # GPIO pins (BCM)
+        self.EN_A = 12
+        self.IN1 = 17
+        self.IN2 = 27
+        self.IN3 = 22
+        self.IN4 = 23
+        self.EN_B = 13
+
+        self.left_pwm = None
+        self.right_pwm = None
+
+        if GPIO_AVAILABLE:
+            self._setup_gpio()
+        else:
+            self.get_logger().warn("RPi.GPIO not available. Motors will NOT move.")
+
+        # Subscriber
+        self.subscription = self.create_subscription(
+            Twist,
+            self.cmd_vel_topic,
+            self.cmd_vel_callback,
+            10
         )
 
-        # Subscribe to this robot's cmd_vel
-        cmd_vel_topic = f"/{self.robot_name}/cmd_vel"
-        self.sub = self.create_subscription(Twist, cmd_vel_topic, self._cmd_vel_cb, 10)
-        self.get_logger().info(f"[{self.robot_name}] Listening on {cmd_vel_topic}")
+        # Watchdog
+        self.last_cmd_time = time.time()
+        self.timeout_sec = 0.5
+        self.create_timer(0.1, self._watchdog)
 
-        # TODO: initialize your hardware outputs here (GPIO / I2C / PWM drivers)
-        # In your repository, you already have working low-level implementations;
-        # the logic below focuses on the mixing + profile scaling.
+        self.get_logger().info(f"[{self.robot_name}] Motor driver listening on {self.cmd_vel_topic}")
 
-    # ----------------------------
-    # Core subscription callback
-    # ----------------------------
+    # --------------------------------------------------
 
-    def _cmd_vel_cb(self, msg: Twist):
-        """
-        Called whenever teleop (or orchestrator) publishes Twist to /<robot>/cmd_vel.
-        We route it based on drive_type.
-        """
-        if self.drive_type == "mecanum":
-            self._handle_mecanum(msg)
-        else:
-            # Safe default: diff drive
-            self._handle_diff_drive(msg)
+    def _setup_gpio(self):
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
 
-    # ----------------------------
-    # Diff drive
-    # ----------------------------
+        for pin in [self.IN1, self.IN2, self.IN3, self.IN4, self.EN_A, self.EN_B]:
+            GPIO.setup(pin, GPIO.OUT)
 
-    def _handle_diff_drive(self, msg: Twist):
-        """
-        Convert Twist -> left/right normalized commands.
-        """
-        max_v = float(self.profile_params.get("max_linear_speed", 0.40))
-        max_w = float(self.profile_params.get("max_angular_speed", 1.00))
+        self.left_pwm = GPIO.PWM(self.EN_A, 1000)
+        self.right_pwm = GPIO.PWM(self.EN_B, 1000)
 
-        v = clamp(msg.linear.x / max_v, -1.0, 1.0) if max_v > 1e-6 else 0.0
-        w = clamp(msg.angular.z / max_w, -1.0, 1.0) if max_w > 1e-6 else 0.0
+        self.left_pwm.start(0)
+        self.right_pwm.start(0)
 
-        # Standard diff mixing:
-        left = clamp(v + w, -1.0, 1.0)
-        right = clamp(v - w, -1.0, 1.0)
+        self._set_motor_outputs(0.0, 0.0)
+        self.get_logger().info("GPIO initialized for motor control")
 
-        # Optional inversion (sometimes one side is mounted mirrored)
-        inv_left = -1.0 if float(self.profile_params.get("invert_left", 1)) < 0 else 1.0
-        inv_right = -1.0 if float(self.profile_params.get("invert_right", 1)) < 0 else 1.0
-        left *= inv_left
-        right *= inv_right
+    # --------------------------------------------------
 
-        self._send_diff_to_hardware(left, right)
+    def cmd_vel_callback(self, msg: Twist):
+        self.last_cmd_time = time.time()
 
-    def _send_diff_to_hardware(self, left: float, right: float):
-        """
-        Replace this with your existing GPIO implementation.
+        wheel_sep = float(self.get_parameter("wheel_separation").value)
+        max_lin = float(self.get_parameter("max_linear_speed").value)
+        max_ang = float(self.get_parameter("max_angular_speed").value)
 
-        'left' and 'right' are normalized [-1..1].
-        """
-        # In your current codebase, this likely maps to:
-        # - direction pins
-        # - PWM pins
-        # - enable pins
-        #
-        # Keep the hardware code proprietary and specific to your motor controller.
-        pass
+        v = max(-max_lin, min(max_lin, msg.linear.x))
+        w = max(-max_ang, min(max_ang, msg.angular.z))
 
-    # ----------------------------
-    # Mecanum drive
-    # ----------------------------
+        # ===============================
+        # TANK-SPIN OVERRIDE
+        # ===============================
+        if abs(v) < 1e-3 and abs(w) > 1e-3:
+            spin_speed = 0.7 * max_lin
+            direction = 1.0 if w > 0.0 else -1.0
+            v_left = -direction * spin_speed
+            v_right = +direction * spin_speed
+            self._set_motor_outputs(v_left, v_right)
+            return
 
-    def _handle_mecanum(self, msg: Twist):
-        """
-        Convert Twist -> four wheel normalized commands (fl, fr, rl, rr).
+        # ===============================
+        # NORMAL DIFF-DRIVE MODE
+        # ===============================
+        v_left = v - (w * wheel_sep / 2.0)
+        v_right = v + (w * wheel_sep / 2.0)
+        self._set_motor_outputs(v_left, v_right)
 
-        Mecanum uses linear.x (forward), linear.y (strafe), angular.z (yaw).
-        """
-        max_v = float(self.profile_params.get("max_linear_speed", 0.50))
-        max_w = float(self.profile_params.get("max_angular_speed", 1.20))
+    # --------------------------------------------------
 
-        vx = clamp(msg.linear.x / max_v, -1.0, 1.0) if max_v > 1e-6 else 0.0
-        vy = clamp(msg.linear.y / max_v, -1.0, 1.0) if max_v > 1e-6 else 0.0
-        omega = clamp(msg.angular.z / max_w, -1.0, 1.0) if max_w > 1e-6 else 0.0
+    def _watchdog(self):
+        if time.time() - self.last_cmd_time > self.timeout_sec:
+            self._set_motor_outputs(0.0, 0.0)
 
-        # k_omega tunes how aggressively angular.z contributes to wheel speed.
-        # If rotation feels too weak, raise k_omega (e.g. 0.22 -> 0.4..0.8),
-        # but do NOT fix rotation strain with k_omega; strain is usually wheel direction.
-        k_omega = float(self.profile_params.get("k_omega", 0.22))
+    # --------------------------------------------------
 
-        def normalize(x: float) -> float:
-            return clamp(x, -1.0, 1.0)
+    def _set_motor_outputs(self, v_left: float, v_right: float):
+        if not GPIO_AVAILABLE:
+            return
 
-        # Standard mecanum mixing:
-        # (Your mechanical mounting can swap signs; fix that with wheel_invert, below.)
-        fl = normalize(vx + vy + k_omega * omega)
-        fr = normalize(vx - vy - k_omega * omega)
-        rl = normalize(vx - vy + k_omega * omega)
-        rr = normalize(vx + vy - k_omega * omega)
+        max_lin = float(self.get_parameter("max_linear_speed").value)
+        max_pwm = float(self.get_parameter("max_pwm").value)
 
-        # Optional per-wheel inversion to match real wiring / gearbox direction.
-        #
-        # Why you want this:
-        # - A very common mecanum symptom is: translation works fine, but pure rotation
-        #   is slow and the motors "fight" / strain. That's almost always because one or
-        #   more wheels are reversed (wiring swapped, motor mounted mirrored, etc.).
-        #
-        # Set this in robot_profiles.yaml under the selected profile params as:
-        #   wheel_invert: {fl: 1, fr: -1, rl: 1, rr: -1}
-        #
-        # Keys: fl, fr, rl, rr. Values: 1 or -1 (anything else is treated as 1).
-        wheel_invert = self.profile_params.get("wheel_invert", {}) if isinstance(self.profile_params, dict) else {}
+        def speed_to_pwm(v):
+            ratio = max(-1.0, min(1.0, v / max_lin))
+            direction = 1 if ratio >= 0 else -1
+            duty = abs(ratio) * max_pwm
+            return duty, direction
 
-        def inv(key: str) -> float:
-            try:
-                return -1.0 if float(wheel_invert.get(key, 1)) < 0 else 1.0
-            except Exception:
-                return 1.0
+        left_duty, left_dir = speed_to_pwm(v_left)
+        right_duty, right_dir = speed_to_pwm(v_right)
 
-        fl *= inv("fl")
-        fr *= inv("fr")
-        rl *= inv("rl")
-        rr *= inv("rr")
+        # Left track
+        GPIO.output(self.IN1, GPIO.HIGH if left_dir > 0 else GPIO.LOW)
+        GPIO.output(self.IN2, GPIO.LOW if left_dir > 0 else GPIO.HIGH)
 
-        self._send_mecanum_to_hardware(fl, fr, rl, rr)
+        # Right track
+        GPIO.output(self.IN3, GPIO.HIGH if right_dir > 0 else GPIO.LOW)
+        GPIO.output(self.IN4, GPIO.LOW if right_dir > 0 else GPIO.HIGH)
 
-    def _send_mecanum_to_hardware(self, fl: float, fr: float, rl: float, rr: float):
-        """
-        Replace this with your existing 4-channel motor controller implementation.
+        self.left_pwm.ChangeDutyCycle(left_duty)
+        self.right_pwm.ChangeDutyCycle(right_duty)
 
-        Inputs are normalized [-1..1] per wheel.
-        """
-        pass
+    # --------------------------------------------------
+
+    def destroy_node(self):
+        self._set_motor_outputs(0.0, 0.0)
+        if GPIO_AVAILABLE:
+            self.left_pwm.stop()
+            self.right_pwm.stop()
+            GPIO.cleanup()
+        super().destroy_node()
 
 
-def main():
-    rclpy.init()
+def main(args=None):
+    rclpy.init(args=args)
     node = MotorDriverNode()
     try:
         rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
     finally:
         node.destroy_node()
         rclpy.shutdown()
