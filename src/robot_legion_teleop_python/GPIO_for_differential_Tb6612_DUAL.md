@@ -1,4 +1,4 @@
-# GPIO connections from Raspberry Pi 4 to DUAL Tb6612fng motor controllers to motors for TANK MOTORS for DIFFERENTIAL DRIVE Chassis  
+# GPIO connections from Raspberry Pi 4 to DUAL Tb6612fng motor controllers to motors for a TANK TRACK DIFFERENTIAL DRIVE Chassis  
 
 ### TB6612 #1 — LEFT SIDE MOTORS  
 
@@ -40,8 +40,6 @@ STBY to GPIO 21
 (or tie to 3.3V if you never want software disable)  
 
 <br>
-<br>
-<br>
 
 ### TB6612 #2 — RIGHT SIDE MOTORS  
 
@@ -81,3 +79,41 @@ BIN2 to GPIO 8
 
 STBY to GPIO 7  
 (you may also tie both STBY pins together and drive them from ONE GPIO if desired)  
+
+<br>  
+
+### Logic power  
+
+Pi 3.3V to VCC on both TB6612 boards  
+
+Pi GND to GND on both boards  
+
+**(3.3V logic is ideal with Pi GPIO)**
+
+<br>  
+
+### Motor power  
+
+If you’re using your 2×18650 (2S) pack:  
+
+Battery + to VM on both boards  
+
+Battery – to GND on both boards  
+
+<br>  
+
+### Common ground (critical)  
+
+All grounds must connect together:  
+
+**Pi GND to TB6612 GND to Battery – (negative)**  
+
+<br>  
+
+### STBY (enable)  
+
+For simplest wiring:  
+
+On TB6612 #1: STBY to VCC (same board)  
+
+On TB6612 #2: STBY to VCC (same board)  
