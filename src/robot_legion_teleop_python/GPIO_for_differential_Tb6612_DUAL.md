@@ -1,6 +1,14 @@
 # GPIO connections from Raspberry Pi 4 to DUAL Tb6612fng motor controllers to motors for a TANK TRACK DIFFERENTIAL DRIVE Chassis  
 
-### TB6612 #1 — LEFT SIDE MOTORS  
+### **This version wires each SIDE as a paired set**:  
+###   - LEFT FRONT and LEFT REAR receive the SAME PWM and direction signals  
+###   - RIGHT FRONT and RIGHT REAR receive the SAME PWM and direction signals  
+###   This prevents motors from fighting each other in a tank-style track system.  
+
+#  
+#  
+
+### TB6612 #1 - LEFT SIDE MOTORS (paired together)  
 
 **Left Front Motor (Channel A)**  
 
@@ -10,14 +18,6 @@ Motor + to A01
 
 Motor − to A02  
 
-**GPIO connections**  
-
-PWMA to GPIO 12 (PWM)  
-
-AIN1 to GPIO 5  
-
-AIN2 to GPIO 6  
-
 **Left Rear Motor (Channel B)**  
 
 **Motor wires**  
@@ -26,24 +26,23 @@ Motor + to B01
 
 Motor − to B02  
 
-**GPIO connections**  
+**GPIO connections (tied so BOTH channels get identical commands)**  
 
-PWMB to GPIO 13 (PWM)  
+PWMA **and** PWMB tied together → GPIO 12 (PWM)  
 
-BIN1 to GPIO 16  
+AIN1 **and** BIN1 tied together → GPIO 5  
 
-BIN2 to GPIO 20  
+AIN2 **and** BIN2 tied together → GPIO 6  
 
-**Standby (board enable)**  
-
-STBY to GPIO 21  
-
-**(or tie to 3.3V if you never want software disable)**  
+#  
+#  
 
 <br>  
-<br>  
 
-### TB6612 #2 — RIGHT SIDE MOTORS  
+#  
+#  
+
+### TB6612 #2 - RIGHT SIDE MOTORS (paired together)  
 
 **Right Front Motor (Channel A)**  
 
@@ -53,14 +52,6 @@ Motor + to A01
 
 Motor − to A02   
 
-**GPIO connections**  
-
-PWMA to GPIO 18 (PWM)  
-
-AIN1 to GPIO 23  
-
-AIN2 to GPIO 24  
-
 **Right Rear Motor (Channel B)**  
 
 **Motor wires**  
@@ -69,54 +60,105 @@ Motor + to B01
 
 Motor − to B02  
 
-**GPIO connections**  
+**GPIO connections (tied so BOTH channels get identical commands)**  
 
-PWMB to GPIO 19 (PWM)  
+PWMA **and** PWMB tied together → GPIO 18 (PWM)  
 
-BIN1 to GPIO 25  
+AIN1 **and** BIN1 tied together → GPIO 23  
 
-BIN2 to GPIO 8  
+AIN2 **and** BIN2 tied together → GPIO 24  
 
-**Standby (board enable)**  
-
-STBY to GPIO 7  
-**(you may also tie both STBY pins together and drive them from ONE GPIO if desired)**  
+#  
+#  
 
 <br>  
-<br>  
 
-### Logic power  
+#  
+#  
 
-Pi 3.3V to VCC on both TB6612 boards  
+### ADD BATTERIES TO POWER MOTORS  
 
-Pi GND to GND on both boards  
+### Common ground
+**All grounds must connect together (critical)**:  
 
-**(3.3V logic is ideal with Pi GPIO)**
+Pi GND to TB6612 GND (LEFT SIDE)
 
-<br>  
+Pi GND to TB6612 GND (RIGHT SIDE)
+
+#  
+#   
 
 ### Motor power  
 
-**If you’re using your 2×18650 (2S) pack**:  
+Battery + to VM on both boards (make a 3-sided jumper wire **OR** use a breadboard)  
 
-Battery + to VM on both boards  
+Battery – to GND on both boards (make a 3-sided jumper wire **OR** use a breadboard)  
 
-Battery – to GND on both boards  
-
-<br>  
-
-### Common ground (critical)  
-
-**All grounds must connect together**:  
-
-Pi GND to TB6612 GND to Battery – (negative)  
+#  
+#   
 
 <br>  
 
-### STBY (enable)  
+#  
+#  
 
-**For simplest wiring**:  
+### COMPLETE THE CIRCUIT
 
-On TB6612 #1: STBY to VCC (same board)  
+### To complete the circuit, connect STBY and VCC on BOTH MOTOR DRIVERS to the single 3.3V pin on the Raspberry Pi 
 
-On TB6612 #2: STBY to VCC (same board)  
+**Create a one-to-four jumper cable unless you are using a breadboard**  
+
+**One way to do this is to make two three-ended jumper cables and connect one end of each to a third three-ended jumper cable.**  
+
+**Then connect**:  
+
+One end (the main stem) to the 3.3V pin on the Pi  
+
+**Then connect the remaining four ends**:  
+
+One end to VCC on motor MOTOR DRIVER 1  
+
+One end to STBY on MOTOR DRIVER 1  
+
+One end to VCC on MOTOR DRIVER 2  
+
+One end to STBY on MOTOR DRIVER 2  
+
+#  
+#  
+
+<br>  
+
+#  
+#  
+
+### ADDITIONAL CONNECTIONS  
+
+### Add a fuse holder and an ON/OFF switch to the circuit  
+
+**Immediately after the positive side of the battery mwithin the circuit**:  
+
+Add a fuse holder (with a 5 amp fuse inside) and an ON/OFF switch to your circuit  
+
+#  
+#  
+
+### Add a LED as a circuit debugging tool  
+
+**Connect an LED to the motor driver circuit so that you know that the circuit is powered (the Tb6612 motor driver does not come with a debugging light)**  
+
+**First connect one LED to one 1 kΩ resistor (500 Ω will be brighter, 2Ω will be dimmer)**:  
+
+Connect the longer wire (the positive side) of the LED to either side of the resistor  
+
+**Then connect the LED and resistor to the circuit**:  
+
+Connect the free end of the resistor to the positive side of the circuit (after the fise holder and the ON/OFF switch, and before everything else)  
+
+Connect the free side of the LED to the negative sied of the circuit (right before the negative side of the battery)  
+
+
+
+
+
+
