@@ -116,7 +116,7 @@ One end (the main stem) to the 3.3V pin on the Pi
 
 **Then connect the remaining four ends**:  
 
-One end to VCC on motor MOTOR DRIVER 1  
+One end to VCC on MOTOR DRIVER 1  
 
 One end to STBY on MOTOR DRIVER 1  
 
@@ -136,7 +136,7 @@ One end to STBY on MOTOR DRIVER 2
 
 ### Add a fuse holder and an ON/OFF switch to the circuit  
 
-**Immediately after the positive side of the battery mwithin the circuit**:  
+**Immediately after the positive side of the battery within the circuit**:  
 
 Add a fuse holder (with a 5 amp fuse inside) and an ON/OFF switch to your circuit  
 
@@ -147,15 +147,15 @@ Add a fuse holder (with a 5 amp fuse inside) and an ON/OFF switch to your circui
 
 **Connect an LED to the motor driver circuit so that you know that the circuit is powered (the Tb6612 motor driver does not come with a debugging light)**  
 
-**First connect one LED to one 1 kΩ resistor (500 Ω will be brighter, 2Ω will be dimmer)**:  
+**First connect one LED to one 1 kΩ resistor (500 Ω will be brighter, 2 kΩ will be dimmer)**:  
 
 Connect the longer wire (the positive side) of the LED to either side of the resistor  
 
 **Then connect the LED and resistor to the circuit**:  
 
-Connect the free end of the resistor to the positive side of the circuit (after the fise holder and the ON/OFF switch, and before everything else)  
+Connect the free end of the resistor to the positive side of the circuit (after the fuse holder and the ON/OFF switch, and before everything else)  
 
-Connect the free side of the LED to the negative sied of the circuit (right before the negative side of the battery)  
+Connect the free side of the LED to the negative side of the circuit (right before the negative side of the battery)  
 
 
 
