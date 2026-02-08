@@ -87,7 +87,8 @@ class MotorDriverNode(Node):
         self.cmd_vel_topic = self.get_parameter("cmd_vel_topic").value.strip() or f"/{self.robot_name}/cmd_vel"
 
         # Normalize common profile naming and initialize hardware interface.
-        gpio_map = self._normalize_gpio_map(gpio_map)
+        # For mecanum/omni we keep 4-channel names intact (fl/fr/rl/rr).
+        gpio_map = self._normalize_gpio_map(gpio_map, drive_type=self.drive_type)
         # Pass PWM frequency through the gpio_map for HardwareInterface
         gpio_map["pwm_hz"] = int(self.get_parameter("pwm_hz").value)
         gpio_map["pwm_ramp_ms"] = float(self.get_parameter("pwm_ramp_ms").value)
@@ -126,7 +127,7 @@ class MotorDriverNode(Node):
 
     # --------------------------------------------------
 
-    def _normalize_gpio_map(self, gpio_map: dict) -> dict:
+    def _normalize_gpio_map(self, gpio_map: dict, drive_type: str = "diff_drive") -> dict:
         """Normalize different hardware profile key names into a common
         mapping consumed by HardwareInterface (en_left,in1_left,in2_left,en_right,...).
 
@@ -134,6 +135,10 @@ class MotorDriverNode(Node):
         """
         if not gpio_map:
             return {}
+
+        # If mecanum/omni, keep 4-channel map intact
+        if str(drive_type).lower() in ("mecanum", "omni", "omnidirectional", "mecanum_drive"):
+            return gpio_map
 
         # If profile already uses expected keys, return as-is
         expected = ("en_left", "in1_left", "in2_left", "en_right", "in1_right", "in2_right")
@@ -206,7 +211,9 @@ class MotorDriverNode(Node):
         }
         cmd = self.drive.mix(msg, params)
         if cmd.left is not None and cmd.right is not None:
-            self._set_motor_outputs(cmd.left, cmd.right)
+            # Rotate commands bypass ramp/deadband for immediate response.
+            is_rotate = abs(cmd.left) > 1e-6 and abs(cmd.right) > 1e-6 and (cmd.left * cmd.right) < 0
+            self._set_motor_outputs(cmd.left, cmd.right, bypass_safety=is_rotate)
         else:
             self._set_mecanum_outputs(cmd)
 
@@ -218,11 +225,13 @@ class MotorDriverNode(Node):
 
     # --------------------------------------------------
 
-    def _set_motor_outputs(self, v_left: float, v_right: float, force: bool = False):
+    def _set_motor_outputs(self, v_left: float, v_right: float, force: bool = False, bypass_safety: bool = False):
         # Convert speeds to duty+direction and delegate to hardware interface
         max_lin = float(self.get_parameter("max_linear_speed").value)
         max_pwm = float(self.get_parameter("max_pwm").value)
         deadband = float(self.get_parameter("pwm_deadband_pct").value)
+        if bypass_safety:
+            deadband = 0.0
         deadband = max(0.0, min(deadband, max_pwm))
 
         def speed_to_pwm(v):
@@ -270,7 +279,7 @@ class MotorDriverNode(Node):
 
         # Use the hardware abstraction layer to actually set pins/PWM
         try:
-            self.hw.set_motor(left_duty, left_dir, right_duty, right_dir)
+            self.hw.set_motor(left_duty, left_dir, right_duty, right_dir, bypass_ramp=bypass_safety)
             self.last_output_time = now
             self._last_commanded = (left_duty, left_dir, right_duty, right_dir)
         except Exception as e:

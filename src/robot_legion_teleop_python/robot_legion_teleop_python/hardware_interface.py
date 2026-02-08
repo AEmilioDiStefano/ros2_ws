@@ -160,7 +160,7 @@ class HardwareInterface:
             self.rr_pwm = None
         self._mock = False
 
-    def set_motor(self, left_duty: float, left_dir: int, right_duty: float, right_dir: int):
+    def set_motor(self, left_duty: float, left_dir: int, right_duty: float, right_dir: int, bypass_ramp: bool = False):
         """Set motor outputs.
 
         left_dir/right_dir: 1 for forward, -1 for reverse
@@ -177,7 +177,7 @@ class HardwareInterface:
             right_dir = -right_dir
 
         # Soft-start ramp / slew limiter (limits duty change per call)
-        if (self.pwm_ramp_ms and self.pwm_ramp_ms > 0) or (self.pwm_slew_pct_per_s and self.pwm_slew_pct_per_s > 0):
+        if not bypass_ramp and ((self.pwm_ramp_ms and self.pwm_ramp_ms > 0) or (self.pwm_slew_pct_per_s and self.pwm_slew_pct_per_s > 0)):
             now = time.monotonic()
             dt = max(0.0, now - self._last_update)
             self._last_update = now
@@ -202,6 +202,9 @@ class HardwareInterface:
             self._cur_left_duty = _ramp(self._cur_left_duty, float(left_duty))
             self._cur_right_duty = _ramp(self._cur_right_duty, float(right_duty))
         else:
+            # Bypass ramp/slew (immediate response)
+            if bypass_ramp:
+                self._last_update = time.monotonic()
             self._cur_left_duty = float(left_duty)
             self._cur_right_duty = float(right_duty)
 
