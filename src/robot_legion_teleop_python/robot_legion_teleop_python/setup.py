@@ -9,13 +9,6 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
-        # Install config files to the package share directory so ament can find them
-        ("share/" + package_name + "/config", ["config/robot_profiles.yaml"]),
-        # Install launch files to the package share directory
-        ("share/" + package_name + "/launch", [
-            "launch/robot_bringup.launch.py",
-            "launch/robot_minimal.launch.py",
-        ]),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -35,10 +28,7 @@ setup(
 
             # New “stand-in autonomy” action servers
             "unit_executor_diffdrive = robot_legion_teleop_python.unit_executor_diffdrive_action_server:main",
-            "unit_executor_omni = robot_legion_teleop_python.unit_executor_omni_action_server:main",            "unit_executor_action_server = robot_legion_teleop_python.unit_executor_action_server:main",
-            
-            # Heartbeat and control lock manager
-            "heartbeat_node = robot_legion_teleop_python.heartbeat_node:main",
-            "control_lock_manager = robot_legion_teleop_python.control_lock_manager:main",        ],
+            "unit_executor_omni = robot_legion_teleop_python.unit_executor_omni_action_server:main",
+        ],
     },
 )

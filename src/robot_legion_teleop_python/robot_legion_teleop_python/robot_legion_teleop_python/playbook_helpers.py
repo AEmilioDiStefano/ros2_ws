@@ -21,7 +21,6 @@ def run_timed_twist(
     plan: TimedTwistPlan,
     rate_hz: float = 20.0,
     stop_at_end: bool = True,
-    stop_event=None,
 ):
     """
     Publish a Twist for plan.duration_s with periodic feedback.
@@ -34,10 +33,6 @@ def run_timed_twist(
     last_fb = 0.0
     while True:
         now = time.monotonic()
-        # Respect external stop event for cancellation
-        if stop_event is not None and getattr(stop_event, "is_set", lambda: False)():
-            feedback_fn(0.0, "cancelled")
-            break
         if now >= end:
             break
 

@@ -31,7 +31,6 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 
-from .drive_profiles import load_profile_registry, resolve_robot_profile
 
 CMD_VEL_TOPIC = "/{robot}/cmd_vel"
 CAMERA_TOPIC = "/{robot}/camera/image_raw"
@@ -48,31 +47,14 @@ class FpvControlArbiter(Node):
     def __init__(self):
         super().__init__("fpv_control_arbiter")
 
-        # Profile registry (optional)
-        self.declare_parameter("profiles_path", "")
-        profiles_path = str(self.get_parameter("profiles_path").value).strip() or None
-        self._profile_registry = None
-        try:
-            self._profile_registry = load_profile_registry(profiles_path)
-        except Exception as ex:
-            self.get_logger().warning(f"[fpv] Failed to load profile registry: {ex}")
-
-        drive_defaults = self._get_default_drive_params()
-
         # ---- Parameters
-        self.declare_parameter("lease_ttl_sec", float(drive_defaults.get("fpv_lease_ttl_sec") or 3.0))
-        self.declare_parameter("max_linear_speed", float(drive_defaults.get("max_linear_mps") or 0.5))
-        self.declare_parameter("max_angular_speed", float(drive_defaults.get("max_angular_rps") or 2.0))
+        self.declare_parameter("lease_ttl_sec", 3.0)
+        self.declare_parameter("max_linear_speed", 0.5)
+        self.declare_parameter("max_angular_speed", 2.0)
 
         self.lease_ttl = float(self.get_parameter("lease_ttl_sec").value)
         self.max_lin = float(self.get_parameter("max_linear_speed").value)
         self.max_ang = float(self.get_parameter("max_angular_speed").value)
-
-        # Track whether ROS params were explicitly overridden (best-effort)
-        self._param_overrides = {
-            "max_linear_speed": self.max_lin != float(drive_defaults.get("max_linear_mps") or 0.5),
-            "max_angular_speed": self.max_ang != float(drive_defaults.get("max_angular_rps") or 2.0),
-        }
 
         # ---- State
         self._known_robots: Set[str] = set()
@@ -104,24 +86,6 @@ class FpvControlArbiter(Node):
             return json.loads(msg.data)
         except Exception:
             return None
-
-    def _get_default_drive_params(self) -> Dict[str, float]:
-        if not self._profile_registry:
-            return {}
-        defaults = self._profile_registry.get("defaults", {}) or {}
-        drive_name = defaults.get("drive_profile")
-        drive_profiles = self._profile_registry.get("drive_profiles", {}) or {}
-        drive = drive_profiles.get(drive_name, {}) if drive_name else {}
-        return drive.get("params", {}) or {}
-
-    def _get_robot_drive_params(self, robot_name: str) -> Dict[str, float]:
-        if not self._profile_registry:
-            return {}
-        try:
-            prof = resolve_robot_profile(self._profile_registry, robot_name)
-            return prof.get("drive_params", {}) or {}
-        except Exception:
-            return {}
 
     def _get_or_make_cmd_vel_pub(self, robot: str):
         if robot in self._cmd_vel_pubs:
@@ -254,17 +218,9 @@ class FpvControlArbiter(Node):
         except Exception:
             return
 
-        # clamp (per-robot defaults from YAML; ROS params override when explicitly set)
-        max_lin = self.max_lin
-        max_ang = self.max_ang
-        if not (self._param_overrides.get("max_linear_speed") or self._param_overrides.get("max_angular_speed")):
-            drive_params = self._get_robot_drive_params(robot)
-            if drive_params:
-                max_lin = float(drive_params.get("max_linear_mps") or max_lin)
-                max_ang = float(drive_params.get("max_angular_rps") or max_ang)
-
-        lin = max(-max_lin, min(max_lin, lin))
-        ang = max(-max_ang, min(max_ang, ang))
+        # clamp
+        lin = max(-self.max_lin, min(self.max_lin, lin))
+        ang = max(-self.max_ang, min(self.max_ang, ang))
 
         twist = Twist()
         twist.linear.x = lin
