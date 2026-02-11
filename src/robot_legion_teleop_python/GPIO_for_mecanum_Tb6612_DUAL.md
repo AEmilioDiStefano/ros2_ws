@@ -2,7 +2,7 @@
 
 ### TB6612 #1 — FRONT MOTORS  
 
-**Front-Left Motor (Channel A)**  
+**FRONT-LEFT MOTOR (Channel A)**  
 
 **Motor wires**  
 
@@ -18,7 +18,9 @@ AIN1 to GPIO 5
 
 AIN2 to GPIO 6  
 
-**Front-Right Motor (Channel B)**  
+<br>
+
+**FRONT-RIGHT MOTOR (Channel B)**  
 
 **Motor wires**  
 
@@ -32,18 +34,15 @@ PWMB to GPIO 13 (PWM1)
 
 BIN1 to GPIO 16  
 
-BIN2 to GPIO 19  
+BIN2 to GPIO 19   
 
-**Standby (board enable)**  
-
-STBY to VCC (same motor driver)  
-
+<br>  
 <br>  
 <br>  
 
 ### TB6612 #2 — REAR MOTORS  
 
-**Rear-Left Motor (Channel A)**  
+**REAR-LEFT MOTOR (Channel A)**  
 
 **Motor wires**  
 
@@ -59,7 +58,9 @@ AIN1 to GPIO 20
 
 AIN2 to GPIO 21  
 
-**Rear-Right Motor (Channel B)**  
+<br>  
+
+**REAR-RIGHT MOTOR (Channel B)**  
 
 **Motor wires**  
 
@@ -74,10 +75,6 @@ PWMB to GPIO 26
 BIN1 to GPIO 23  
 
 BIN2 to GPIO 24  
-
-**Standby (board enable)**  
-
-STBY to VCC (same motor driver)  
 
 <br>  
 <br>  
@@ -94,8 +91,6 @@ Pi GND to GND on both boards
 
 ### Motor power  
 
-**If you’re using your 2×18650 (2S) pack**:  
-
 Battery + to VM on both boards  
 
 Battery – to GND on both boards  
@@ -106,14 +101,9 @@ Battery – to GND on both boards
 
 **All grounds must connect together**:  
 
-Pi GND to TB6612 GND to Battery – (negative)  
+Pi GND to TB6612 GND (both drivers) 
 
-<br>  
-
-### STBY (enable)  
-
-On TB6612 #1: STBY to VCC (same board)  
-On TB6612 #2: STBY to VCC (same board)  
+TB6612 GND to Battery Negative (both drivers)  
 
 <br>  
 <br>  
