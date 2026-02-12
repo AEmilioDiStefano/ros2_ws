@@ -8,6 +8,63 @@
 #  
 #  
 
+### IMPORTANT:  This robot uses a <u>Tb6612</u> motor driver.  
+
+### ALL WIRING from the Li-Ion batteries to the motor drivers MUST BE at least 18 AWG    
+
+### For wiring from the motor drivers to the Pi, common Dupont jumper cables are ok.
+
+#  
+# 
+
+## POWER YOUR MOTOR CIRCUIT (USE 18 AVG!)
+
+**This project uses battery holders for two 3.7V 2800mAh Li-Ion battteries**
+
+**IF** your battery holder(s) have attached cable thinner than 18 AWG, replace all connections with 18 AWG cable
+
+**FIRST** connect the **positive** side of the battery holder(s) to your ON/OFF switch  
+
+**THEN** connect the other side of the ON/OFF switch to your fuse holder (with fuse) 
+
+**THEN** solder **THREE MORE 18 AWG CABLES** (around 6-8 inches long) to the other side of the fuse holder
+
+### This is the POSITIVE SIDE of your circuit 
+
+**SOLDER ONE OF POSITIVE 20 AWG CABLES** to the **VM** on one of your Tb6612 motor controllers  
+
+**SOLDER A SECOND POSITIVE 20 AWG CABLE** to the **VM** on the other Tb6612 motor controller  
+
+**SOLDER THE THIRD POSITIVE 20 AWG CABLE** to a **1 kΩ (1000 ohm) 1 watt resistor**  
+
+**THEN** connect the other side of the resistor to the positive side of a small LED  
+
+### Now connect three more 18 AWG cables to the NEGATIVE SIDE of your battery holder(s) 
+
+**CONNECT ONE OF YOUR NEGATIVE 18 AWG CABLES** to one of the **GND**s on one of your motor drivers
+
+**CONNECT A SECOND NEGATIVE 18 AWG CABLE** to one of the **GND**s on **the other motor driver**  
+
+**FINALLY**, connect the third and last remaining 18 **NEGATIVE 18 AWG CABLE** to the free side of the LED already connected to the positive side of the circuit  
+
+### Now test your circuit by switching the ON/OFF button  
+
+**THE LED SHOULD LIGHT UP**  
+
+**This LED is used as a debugging tool** informing the operator when the circuit is successfully powering the motor system
+
+If the LED does not light up, check your circuit and your batteries. 
+
+### IMPORTANT: Make sure to leave the ON/OFF switch on OFF while you perform ANY CHANGES to your circuit or your GPIO pins, otherwise you could blow a fuse  
+
+#  
+#  
+
+<br>  
+
+#  
+#   
+
 ### TB6612 #1 - LEFT SIDE MOTORS (paired together)  
 
 **Left Front Motor (Channel A)**  
@@ -131,31 +188,6 @@ One end to STBY on MOTOR DRIVER 2
 
 #  
 #  
-
-### ADDITIONAL CONNECTIONS  
-
-### Add a fuse holder and an ON/OFF switch to the circuit  
-
-**Immediately after the positive side of the battery within the circuit**:  
-
-Add a fuse holder (with a 5 amp fuse inside) and an ON/OFF switch to your circuit  
-
-#  
-#  
-
-### Add a LED as a circuit debugging tool  
-
-**Connect an LED to the motor driver circuit so that you know that the circuit is powered (the Tb6612 motor driver does not come with a debugging light)**  
-
-**First connect one LED to one 1 kΩ resistor (500 Ω will be brighter, 2 kΩ will be dimmer)**:  
-
-Connect the longer wire (the positive side) of the LED to either side of the resistor  
-
-**Then connect the LED and resistor to the circuit**:  
-
-Connect the free end of the resistor to the positive side of the circuit (after the fuse holder and the ON/OFF switch, and before everything else)  
-
-Connect the free side of the LED to the negative side of the circuit (right before the negative side of the battery)  
 
 
 

@@ -1,6 +1,57 @@
-# GPIO connections from Raspberry Pi 4 to DUAL Tb6612fng motor controllers for a MECANUM Chassis  
+# GPIO connections from Raspberry Pi 4 to DUAL Tb6612 motor controllers for a MECANUM Chassis  
 
-### TB6612 #1 — FRONT MOTORS  
+### IMPORTANT:  This robot uses a <u>Tb6612</u> motor driver.  
+
+### ALL WIRING from the Li-Ion batteries to the motor drivers MUST BE at least 18 AWG    
+
+### For wiring from the motor drivers to the Pi, common Dupont jumper cables are ok.
+
+<br>  
+
+## POWER YOUR MOTOR CIRCUIT (USE 18 AVG!)
+
+**This project uses battery holders for two 3.7V 2800mAh Li-Ion battteries**
+
+**IF** your battery holder(s) have attached cable thinner than 18 AWG, replace all connections with 18 AWG cable
+
+**FIRST** connect the **positive** side of the battery holder(s) to your ON/OFF switch  
+
+**THEN** connect the other side of the ON/OFF switch to your fuse holder (with fuse) 
+
+**THEN** solder **THREE MORE 18 AWG CABLES** (around 6-8 inches long) to the other side of the fuse holder
+
+### This is the POSITIVE SIDE of your circuit 
+
+**SOLDER ONE OF POSITIVE 20 AWG CABLES** to the **VM** on one of your Tb6612 motor controllers  
+
+**SOLDER A SECOND POSITIVE 20 AWG CABLE** to the **VM** on the other Tb6612 motor controller  
+
+**SOLDER THE THIRD POSITIVE 20 AWG CABLE** to a **1 kΩ (1000 ohm) 1 watt resistor**  
+
+**THEN** connect the other side of the resistor to the positive side of a small LED  
+
+### Now connect three more 18 AWG cables to the NEGATIVE SIDE of your battery holder(s) 
+
+**CONNECT ONE OF YOUR NEGATIVE 18 AWG CABLES** to one of the **GND**s on one of your motor drivers
+
+**CONNECT A SECOND NEGATIVE 18 AWG CABLE** to one of the **GND**s on **the other motor driver**  
+
+**FINALLY**, connect the third and last remaining 18 **NEGATIVE 18 AWG CABLE** to the free side of the LED already connected to the positive side of the circuit  
+
+### Now test your circuit by switching the ON/OFF button  
+
+**THE LED SHOULD LIGHT UP**  
+
+**This LED is used as a debugging tool** informing the operator when the circuit is successfully powering the motor system
+
+If the LED does not light up, check your circuit and your batteries. 
+
+### IMPORTANT: Make sure to leave the ON/OFF switch on OFF while you perform ANY CHANGES to your circuit or your GPIO pins, otherwise you could blow a fuse  
+
+<br>  
+<br>  
+
+## TB6612 #1 — FRONT MOTORS  
 
 **FRONT-LEFT MOTOR (Channel A)**  
 
@@ -40,7 +91,7 @@ BIN2 to GPIO 19
 <br>  
 <br>  
 
-### TB6612 #2 — REAR MOTORS  
+## TB6612 #2 — REAR MOTORS  
 
 **REAR-LEFT MOTOR (Channel A)**  
 
@@ -79,13 +130,13 @@ BIN2 to GPIO 24
 <br>  
 <br>  
 
+## COMPLETE THE CIRCUIT
+
 ### Logic power  
 
 Pi 3.3V to VCC on both TB6612 boards  
 
 Pi GND to GND on both boards  
-
-**(3.3V logic is ideal with Pi GPIO)**
 
 <br>  
 
@@ -103,12 +154,10 @@ Battery – to GND on both boards
 
 Pi GND to TB6612 GND (both drivers) 
 
-TB6612 GND to Battery Negative (both drivers)  
+TB6612 GND to Battery **Negative** (both drivers)  
 
 <br>  
 <br>  
-
-### COMPLETE THE CIRCUIT  
 
 ### To complete the circuit, connect STBY and VCC on BOTH MOTOR DRIVERS to the single 3.3V pin on the Raspberry Pi  
 
